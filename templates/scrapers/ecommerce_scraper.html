@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce Scraper - ScrapeHub</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Navigation Header */
+        .nav-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 5px;
+            list-style: none;
+        }
+
+        .nav-menu-link {
+            display: block;
+            padding: 10px 20px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-menu-link:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .nav-menu-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+        }
+
+        .btn-success {
+            background: #10b981;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+        }
+
+        .selector-picker-section {
+            border: 2px dashed #0ea5e9;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f0f9ff;
+            margin-top: 20px;
+        }
+
+        .selector-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .selector-picker-header h3 {
+            color: #0369a1;
+            margin: 0;
+        }
+
+        .selector-picker-mode {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .selector-picker-mode button {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #0ea5e9;
+            background: white;
+            color: #0369a1;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .selector-picker-mode button.active {
+            background: #0ea5e9;
+            color: white;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border: 2px solid #0ea5e9;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .selector-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            cursor: crosshair;
+        }
+
+        .selector-overlay.active {
+            pointer-events: all;
+            cursor: crosshair;
+            background: rgba(14, 165, 233, 0.05);
+        }
+
+        .selector-highlight {
+            position: absolute;
+            border: 3px solid #0ea5e9;
+            background: rgba(14, 165, 233, 0.1);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .selector-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .selector-field {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .selector-field.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .selector-field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .selector-field-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .selector-field-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .selector-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .selector-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #6b7280;
+            min-height: 30px;
+        }
+
+        .selector-preview.has-value {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .results-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .product-card {
+            background: #f9fafb;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .product-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .product-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+            
+        .product-detail {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 5px;
+        }
+
+        .product-detail-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="nav-header">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span>🔍</span>
+                <span>ScrapeHub</span>
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-menu-link">Universal API Client</a></li>
+                <li><a href="/company-social-finder/" class="nav-menu-link">Company Social Finder</a></li>
+                <li><a href="/social-scraper/" class="nav-menu-link">Social Scraper</a></li>
+                <li><a href="/ecommerce-scraper/" class="nav-menu-link active">E-commerce Scraper</a></li>
+                <li><a href="/rapidapi-scraper/" class="nav-menu-link">RapidAPI Scraper</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🛒 E-commerce Scraper</h1>
+            <p>Extract product data from e-commerce websites with visual selector picker</p>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('scrape')">Scrape Products</button>
+                <button class="tab" onclick="switchTab('configure')">Configure Selectors</button>
+            </div>
+
+            <!-- Scrape Tab -->
+            <div id="scrapeTab" class="tab-content active">
+                <form id="scrapeForm">
+                    <div class="form-group">
+                        <label for="productUrl">Product URL(s) *</label>
+                        <textarea id="productUrl" name="productUrl" rows="3" 
+                                  placeholder="Enter product URL(s), one per line&#10;Example:&#10;https://example.com/product1&#10;https://example.com/product2" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="platform">Platform</label>
+                        <select id="platform" name="platform">
+                            <option value="other">Auto-detect</option>
+                            <option value="amazon">Amazon</option>
+                            <option value="ebay">eBay</option>
+                            <option value="shopify">Shopify</option>
+                            <option value="aliexpress">AliExpress</option>
+                            <option value="etsy">Etsy</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="trackPrice" name="trackPrice">
+                            <span>Track Price History</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxListingPages">Max Listing Pages (for category/search/tag pages)</label>
+                        <input type="number" id="maxListingPages" name="maxListingPages" value="1" min="1" max="10" 
+                               placeholder="Number of listing pages to scrape" style="width: 100%; padding: 8px; margin-top: 5px;">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Set to 1+ if scraping category/search/tag/collection pages
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="scrapeIndividualProducts" name="scrapeIndividualProducts">
+                            <span>Also Scrape Individual Product Pages</span>
+                        </label>
+                        <small style="color: #666; display: block; margin-top: 5px; margin-left: 28px;">
+                            If checked, will scrape detail pages for each product found in listings (slower but more complete)
+                        </small>
+                    </div>
+
+                    <button type="submit" class="btn" id="scrapeBtn">
+                        🚀 Scrape Products
+                    </button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Scraping products...</p>
+                </div>
+
+                <div class="results-section" id="resultsSection">
+                    <h2 style="margin-bottom: 20px;">Scraped Products</h2>
+                    <div id="resultsContainer"></div>
+                </div>
+            </div>
+
+            <!-- Configure Selectors Tab -->
+            <div id="configureTab" class="tab-content">
+                <div class="alert alert-info">
+                    <strong>💡 Visual Selector Picker:</strong> Load a product page and click on elements to automatically generate CSS selectors. This helps configure selectors for different e-commerce sites.
+                </div>
+
+                <div class="form-group">
+                    <label for="configUrl">Product Page URL</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="url" id="configUrl" name="configUrl" 
+                               placeholder="https://example.com/product" style="flex: 1;">
+                        <button type="button" class="btn btn-secondary" onclick="loadPageForPicking()">
+                            📄 Load Page
+                        </button>
+                    </div>
+                </div>
+
+                <div class="selector-picker-section" id="pickerSection" style="display: none;">
+                    <div class="selector-picker-header">
+                        <h3>🎯 Visual Selector Picker</h3>
+                        <button type="button" class="btn btn-danger btn-small" onclick="stopPicking()">
+                            Stop Picking
+                        </button>
+                    </div>
+
+                    <div class="selector-picker-mode">
+                        <button class="active" onclick="setPickerMode('click')">🖱️ Click to Select</button>
+                        <button onclick="setPickerMode('hover')">👆 Hover to Preview</button>
+                    </div>
+
+                    <div class="iframe-container" id="iframeContainer">
+                        <iframe id="pageFrame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups" style="width: 100%; height: 600px; border: 1px solid #ddd; border-radius: 8px;" referrerpolicy="no-referrer"></iframe>
+                        <div class="selector-overlay" id="selectorOverlay"></div>
+                    </div>
+
+                    <div class="selector-fields" id="selectorFields">
+                        <div class="selector-field" data-field="title">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">📝 Title</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('title')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('title')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-title" placeholder="CSS Selector (e.g., h1.product-title)">
+                            <div class="selector-preview" id="preview-title">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="price">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">💰 Price</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('price')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('price')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-price" placeholder="CSS Selector (e.g., .price)">
+                            <div class="selector-preview" id="preview-price">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="rating">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">⭐ Rating</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('rating')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('rating')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-rating" placeholder="CSS Selector">
+                            <div class="selector-preview" id="preview-rating">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="review_count">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">💬 Review Count</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('review_count')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('review_count')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-review_count" placeholder="CSS Selector">
+                            <div class="selector-preview" id="preview-review_count">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="description">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">📄 Description</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('description')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('description')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-description" placeholder="CSS Selector">
+                            <div class="selector-preview" id="preview-description">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="image">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">🖼️ Image</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('image')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('image')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-image" placeholder="CSS Selector">
+                            <div class="selector-preview" id="preview-image">No selector set</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info" style="margin-top: 30px;">
+                        <strong>📋 Listing Page Selectors:</strong> Use these for category, search, tag, or collection pages that show multiple products.
+                    </div>
+
+                    <div class="selector-fields" id="listingSelectorFields">
+                        <div class="selector-field" data-field="product_card">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">📦 Product Card (Container)</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('product_card')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('product_card')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-product_card" placeholder="CSS Selector for product card container">
+                            <div class="selector-preview" id="preview-product_card">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="product_link">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">🔗 Product Link</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('product_link')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('product_link')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-product_link" placeholder="CSS Selector for product link (inside card)">
+                            <div class="selector-preview" id="preview-product_link">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="product_title_listing">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">📝 Title (in Listing)</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('product_title_listing')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('product_title_listing')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-product_title_listing" placeholder="CSS Selector for title in listing card">
+                            <div class="selector-preview" id="preview-product_title_listing">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="product_price_listing">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">💰 Price (in Listing)</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('product_price_listing')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('product_price_listing')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-product_price_listing" placeholder="CSS Selector for price in listing card">
+                            <div class="selector-preview" id="preview-product_price_listing">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="product_image_listing">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">🖼️ Image (in Listing)</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('product_image_listing')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('product_image_listing')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-product_image_listing" placeholder="CSS Selector for image in listing card">
+                            <div class="selector-preview" id="preview-product_image_listing">No selector set</div>
+                        </div>
+
+                        <div class="selector-field" data-field="pagination_next">
+                            <div class="selector-field-header">
+                                <span class="selector-field-name">➡️ Next Page Link</span>
+                                <div class="selector-field-actions">
+                                    <button class="btn btn-success btn-small" onclick="pickField('pagination_next')">Pick</button>
+                                    <button class="btn btn-secondary btn-small" onclick="testSelector('pagination_next')">Test</button>
+                                </div>
+                            </div>
+                            <input type="text" class="selector-input" id="selector-pagination_next" placeholder="CSS Selector for next page link">
+                            <div class="selector-preview" id="preview-pagination_next">No selector set</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="testAllSelectors()">🧪 Test All Selectors</button>
+                        <button class="btn btn-success" onclick="saveSelectors()">💾 Save Selectors</button>
+                        <button class="btn btn-secondary" onclick="loadSelectors()">📂 Load Saved</button>
+                        <button class="btn" onclick="exportSelectors()">📤 Export Config</button>
+                    </div>
+
+                    <div class="alert alert-info" style="margin-top: 20px;">
+                        <strong>💡 Tip:</strong> If the iframe doesn't load due to CORS, you can:
+                        <ol style="margin: 10px 0 0 20px;">
+                            <li>Open the URL in a new browser tab</li>
+                            <li>Right-click on the element you want to scrape</li>
+                            <li>Select "Inspect" to open DevTools</li>
+                            <li>Right-click the element in DevTools → Copy → Copy selector</li>
+                            <li>Paste the selector in the field above and click "Test"</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPickingField = null;
+        let pickerMode = 'click';
+        let savedSelectors = {};
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tabName === 'scrape') {
+                document.querySelector('.tab:first-child').classList.add('active');
+                document.getElementById('scrapeTab').classList.add('active');
+            } else {
+                document.querySelector('.tab:last-child').classList.add('active');
+                document.getElementById('configureTab').classList.add('active');
+            }
+        }
+
+        function loadPageForPicking() {
+            const url = document.getElementById('configUrl').value;
+            if (!url) {
+                alert('Please enter a URL');
+                return;
+            }
+
+            const frame = document.getElementById('pageFrame');
+            const pickerSection = document.getElementById('pickerSection');
+            const iframeContainer = document.getElementById('iframeContainer');
+            
+            // Show loading state
+            pickerSection.style.display = 'block';
+            frame.style.display = 'none';
+            
+            // Remove any existing loading message
+            const existingLoading = document.getElementById('iframeLoading');
+            if (existingLoading) {
+                existingLoading.remove();
+            }
+            
+            const loadingMsg = document.createElement('div');
+            loadingMsg.id = 'iframeLoading';
+            loadingMsg.style.cssText = 'text-align: center; padding: 40px; color: #666;';
+            loadingMsg.innerHTML = '<div class="spinner"></div><p>Loading page...</p>';
+            iframeContainer.appendChild(loadingMsg);
+
+            // Use backend proxy to bypass CORS
+            const proxyUrl = `/api/ecommerce-proxy-page/?url=${encodeURIComponent(url)}`;
+            
+            // Reset iframe
+            frame.src = 'about:blank';
+            
+            // Fetch the HTML content and load it as a blob URL (same-origin)
+            fetch(proxyUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    // Create a blob URL from the HTML content
+                    const blob = new Blob([html], { type: 'text/html' });
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // Set up load handler BEFORE setting src
+                    // Check if page actually loaded (with timeout)
+                    let loadCheckTimeout = setTimeout(() => {
+                        const loadingMsg = document.getElementById('iframeLoading');
+                        if (loadingMsg) {
+                            loadingMsg.innerHTML = '<p style="color: red;">Page is taking too long to load. The site may block proxy requests.</p><p><button onclick="window.open(\'' + url + '\', \'_blank\')" class="btn">Open in New Tab Instead</button></p>';
+                        }
+                        showAlert('warning', 'Page is loading slowly. If it doesn\'t appear, the site may block proxy requests.');
+                    }, 30000); // 30 second timeout (JS rendering takes time)
+                    
+                    // Show iframe when loaded (blob URLs are same-origin, so no CORS issues!)
+                    frame.onload = function() {
+                        clearTimeout(loadCheckTimeout);
+                        
+                        // Actually verify the iframe has content
+                        // Blob URLs are same-origin, so we can access the document!
+                        setTimeout(() => {
+                    try {
+                            // Try to access iframe content (should work with blob URLs!)
+                            const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+                        
+                        // Check if we can access the document and it has content
+                        if (!iframeDoc || !iframeDoc.body) {
+                            throw new Error('Cannot access iframe content - document or body not available');
+                        }
+                        
+                        // Check if body has actual content (not just empty)
+                        const bodyText = iframeDoc.body.innerText || iframeDoc.body.textContent || '';
+                        const bodyHTML = iframeDoc.body.innerHTML || '';
+                        const hasContent = bodyText.trim().length > 50 || iframeDoc.body.children.length > 2;
+                        
+                        // Check if it's an error page
+                        const title = iframeDoc.title || '';
+                        const isError = bodyHTML.toLowerCase().includes('error') || 
+                                      bodyHTML.toLowerCase().includes('failed') ||
+                                      title.toLowerCase().includes('error') ||
+                                      bodyText.toLowerCase().includes('failed to load');
+                        
+                        if (isError) {
+                            throw new Error('Error page detected: ' + bodyText.substring(0, 100));
+                        }
+                        
+                        if (!hasContent) {
+                            throw new Error('Page appears to be empty (body has minimal content)');
+                        }
+                        
+                        // Success - page actually loaded
+                        const loadingMsg = document.getElementById('iframeLoading');
+                        if (loadingMsg) {
+                            loadingMsg.remove();
+                        }
+                        frame.style.display = 'block';
+                        showAlert('success', 'Page loaded! Click "Pick" on any field, then click on the element in the page.');
+                        
+                    } catch (err) {
+                        // Failed to verify content
+                        const loadingMsg = document.getElementById('iframeLoading');
+                        if (loadingMsg) {
+                            const errorMsg = err.message || 'Unknown error';
+                            loadingMsg.innerHTML = '<p style="color: red;">Failed to load page: ' + errorMsg + '</p><p style="margin-top: 10px; color: #666;">The page may require JavaScript rendering. Trying with JavaScript...</p>';
+                            
+                            // Try again with JS rendering flag
+                            setTimeout(() => {
+                                const jsProxyUrl = `/api/ecommerce-proxy-page/?url=${encodeURIComponent(url)}&use_js=force`;
+                                frame.src = jsProxyUrl;
+                            }, 2000);
+                        } else {
+                            showAlert('error', 'Failed to load page: ' + errorMsg + '. Try opening it in a new tab and use browser DevTools.');
+                        }
+                            console.error('Iframe load error:', err);
+                        }
+                        }, 1000); // Delay to ensure content is ready
+                    };
+                    
+                    // Load the blob URL in the iframe (same-origin, no CORS issues!)
+                    frame.src = blobUrl;
+                })
+                .catch(error => {
+                    const loadingMsg = document.getElementById('iframeLoading');
+                    if (loadingMsg) {
+                        loadingMsg.innerHTML = '<p style="color: red;">Failed to fetch page: ' + error.message + '</p><p style="margin-top: 10px;"><button onclick="window.open(\'' + url + '\', \'_blank\')" class="btn">Open in New Tab Instead</button></p>';
+                    }
+                    showAlert('error', 'Failed to fetch page: ' + error.message);
+                    console.error('Fetch error:', error);
+                });
+            
+            frame.onerror = function() {
+                const loadingMsg = document.getElementById('iframeLoading');
+                if (loadingMsg) {
+                    loadingMsg.innerHTML = '<p style="color: red;">Failed to load page. The site may block proxy requests.</p><p style="margin-top: 10px;"><button onclick="window.open(\'' + url + '\', \'_blank\')" class="btn">Open in New Tab Instead</button></p>';
+                }
+                frame.style.display = 'none';
+                showAlert('error', 'Failed to load page. You can still use browser DevTools to inspect elements manually.');
+            };
+        }
+
+        function setPickerMode(mode) {
+            pickerMode = mode;
+            document.querySelectorAll('.selector-picker-mode button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function pickField(fieldName) {
+            currentPickingField = fieldName;
+            const overlay = document.getElementById('selectorOverlay');
+            overlay.classList.add('active');
+            
+            document.querySelectorAll('.selector-field').forEach(field => field.classList.remove('active'));
+            document.querySelector(`[data-field="${fieldName}"]`).classList.add('active');
+
+            showAlert('info', `Click on the ${fieldName} element in the page to select it.`);
+        }
+
+        function stopPicking() {
+            currentPickingField = null;
+            document.getElementById('selectorOverlay').classList.remove('active');
+            document.querySelectorAll('.selector-field').forEach(field => field.classList.remove('active'));
+        }
+
+        // Handle clicks in iframe (if accessible)
+        document.getElementById('selectorOverlay').addEventListener('click', function(e) {
+            if (!currentPickingField) return;
+
+            const frame = document.getElementById('pageFrame');
+            try {
+                // Get iframe position relative to page
+                const frameRect = frame.getBoundingClientRect();
+                
+                // Calculate click position relative to iframe
+                const iframeX = e.clientX - frameRect.left;
+                const iframeY = e.clientY - frameRect.top;
+                
+                // Get element from iframe
+                const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+                const element = iframeDoc.elementFromPoint(iframeX, iframeY);
+                
+                if (element) {
+                    const selector = generateSelector(element);
+                    document.getElementById(`selector-${currentPickingField}`).value = selector;
+                    testSelector(currentPickingField);
+                    stopPicking();
+                    showAlert('success', `Selector generated: ${selector}`);
+                } else {
+                    showAlert('warning', 'No element found at that position. Try clicking directly on an element.');
+                }
+            } catch (err) {
+                console.error('Error accessing iframe:', err);
+                showAlert('error', 'Cannot access iframe content. Please use browser DevTools to inspect and copy selectors manually.');
+            }
+        });
+        
+        // Also handle clicks directly on iframe (when overlay is not active)
+        document.getElementById('pageFrame').addEventListener('load', function() {
+            try {
+                const frame = this;
+                const iframeDoc = frame.contentDocument || frame.contentWindow.document;
+                
+                // Add click handler to iframe document
+                iframeDoc.addEventListener('click', function(e) {
+                    if (!currentPickingField) return;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const element = e.target;
+                    if (element) {
+                        const selector = generateSelector(element);
+                        document.getElementById(`selector-${currentPickingField}`).value = selector;
+                        testSelector(currentPickingField);
+                        stopPicking();
+                        showAlert('success', `Selector generated: ${selector}`);
+                    }
+                }, true);
+            } catch (err) {
+                // If we can't access iframe content, that's okay - overlay will handle it
+                console.log('Could not add click handler to iframe content:', err);
+            }
+        });
+
+        function generateSelector(element) {
+            // Generate a CSS selector for the element
+            if (element.id) {
+                return `#${element.id}`;
+            }
+            
+            let selector = element.tagName.toLowerCase();
+            if (element.className) {
+                const classes = element.className.split(' ').filter(c => c).join('.');
+                if (classes) {
+                    selector += '.' + classes;
+                }
+            }
+            
+            // Add parent context if needed
+            let parent = element.parentElement;
+            if (parent) {
+                const parentSelector = parent.tagName.toLowerCase();
+                if (parent.className) {
+                    const parentClasses = parent.className.split(' ').filter(c => c).slice(0, 1).join('.');
+                    if (parentClasses) {
+                        return `${parentSelector}.${parentClasses} > ${selector}`;
+                    }
+                }
+            }
+            
+            return selector;
+        }
+
+        async function testSelector(fieldName) {
+            const selector = document.getElementById(`selector-${fieldName}`).value;
+            if (!selector) {
+                showAlert('info', 'Please enter a selector first');
+                return;
+            }
+
+            const url = document.getElementById('configUrl').value;
+            if (!url) {
+                showAlert('error', 'Please enter a URL to test against');
+                return;
+            }
+
+            const preview = document.getElementById(`preview-${fieldName}`);
+            preview.textContent = 'Testing...';
+            preview.classList.remove('has-value');
+
+            try {
+                const response = await fetch('/api/ecommerce-test-selectors/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        selectors: {
+                            [fieldName]: selector
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.results[fieldName]) {
+                    const result = data.results[fieldName];
+                    if (result.found) {
+                        preview.textContent = result.value || 'Found (empty)';
+                        preview.classList.add('has-value');
+                        showAlert('success', `Selector works! Found: "${result.value.substring(0, 50)}"`);
+                    } else {
+                        preview.textContent = result.error || 'Not found';
+                        preview.classList.remove('has-value');
+                        showAlert('error', `Selector not found: ${result.error || 'Element not found'}`);
+                    }
+                } else {
+                    preview.textContent = 'Test failed';
+                    showAlert('error', data.error || 'Test failed');
+                }
+            } catch (error) {
+                preview.textContent = 'Error testing';
+                showAlert('error', 'Error: ' + error.message);
+            }
+        }
+
+        async function testAllSelectors() {
+            const url = document.getElementById('configUrl').value;
+            if (!url) {
+                showAlert('error', 'Please enter a URL first');
+                return;
+            }
+
+            const selectors = {};
+            document.querySelectorAll('.selector-input').forEach(input => {
+                const field = input.id.replace('selector-', '');
+                if (input.value) {
+                    selectors[field] = input.value;
+                }
+            });
+
+            if (Object.keys(selectors).length === 0) {
+                showAlert('info', 'No selectors to test');
+                return;
+            }
+
+            showAlert('info', 'Testing all selectors...');
+
+            try {
+                const response = await fetch('/api/ecommerce-test-selectors/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        selectors: selectors
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Object.keys(data.results).forEach(fieldName => {
+                        const result = data.results[fieldName];
+                        const preview = document.getElementById(`preview-${fieldName}`);
+                        if (result.found) {
+                            preview.textContent = result.value || 'Found (empty)';
+                            preview.classList.add('has-value');
+                        } else {
+                            preview.textContent = result.error || 'Not found';
+                            preview.classList.remove('has-value');
+                        }
+                    });
+                    showAlert('success', 'All selectors tested!');
+                } else {
+                    showAlert('error', data.error || 'Test failed');
+                }
+            } catch (error) {
+                showAlert('error', 'Error: ' + error.message);
+            }
+        }
+
+        function saveSelectors() {
+            const selectors = {};
+            document.querySelectorAll('.selector-input').forEach(input => {
+                const field = input.id.replace('selector-', '');
+                if (input.value) {
+                    selectors[field] = input.value;
+                }
+            });
+
+            savedSelectors = selectors;
+            localStorage.setItem('ecommerce_selectors', JSON.stringify(selectors));
+            showAlert('success', 'Selectors saved to browser storage!');
+        }
+
+        function loadSelectors() {
+            const saved = localStorage.getItem('ecommerce_selectors');
+            if (saved) {
+                const selectors = JSON.parse(saved);
+                Object.keys(selectors).forEach(field => {
+                    const input = document.getElementById(`selector-${field}`);
+                    if (input) {
+                        input.value = selectors[field];
+                        testSelector(field);
+                    }
+                });
+                showAlert('success', 'Selectors loaded!');
+            } else {
+                showAlert('info', 'No saved selectors found.');
+            }
+        }
+
+        function exportSelectors() {
+            const selectors = {};
+            document.querySelectorAll('.selector-input').forEach(input => {
+                const field = input.id.replace('selector-', '');
+                if (input.value) {
+                    selectors[field] = input.value;
+                }
+            });
+
+            const json = JSON.stringify(selectors, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'selectors.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showAlert(type, message) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            document.querySelector('.card').insertBefore(alert, document.querySelector('.card').firstChild);
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        // Scrape form submission
+        document.getElementById('scrapeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const urls = document.getElementById('productUrl').value.split('\n').filter(u => u.trim());
+            const platform = document.getElementById('platform').value;
+            const trackPrice = document.getElementById('trackPrice').checked;
+
+            const loading = document.getElementById('loading');
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const scrapeBtn = document.getElementById('scrapeBtn');
+
+            loading.classList.add('active');
+            resultsSection.classList.remove('active');
+            scrapeBtn.disabled = true;
+
+            // Collect custom selectors if configured
+            const customSelectors = {};
+            document.querySelectorAll('.selector-input').forEach(input => {
+                const field = input.id.replace('selector-', '');
+                if (input.value) {
+                    customSelectors[field] = input.value;
+                }
+            });
+
+            try {
+            const maxListingPages = parseInt(document.getElementById('maxListingPages').value) || 1;
+            const scrapeIndividualProducts = document.getElementById('scrapeIndividualProducts').checked;
+
+            const requestBody = {
+                urls: urls.length === 1 ? urls[0] : urls,
+                platform: platform,
+                track_price: trackPrice,
+                max_listing_pages: maxListingPages,
+                scrape_individual_products: scrapeIndividualProducts
+            };
+
+            // Add custom selectors if any are configured
+            if (Object.keys(customSelectors).length > 0) {
+                requestBody.custom_selectors = customSelectors;
+            }
+
+                const response = await fetch('/api/ecommerce-scrape/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    resultsContainer.innerHTML = '';
+                    
+                    if (data.products && data.products.length > 0) {
+                        data.products.forEach(product => {
+                            const card = document.createElement('div');
+                            card.className = 'product-card';
+                            card.innerHTML = `
+                                <h3>${product.title || 'Unknown Product'}</h3>
+                                <div class="product-details">
+                                    <div class="product-detail">
+                                        <span class="product-detail-label">Price</span>
+                                        <span class="product-detail-value">${product.price ? '$' + product.price : 'N/A'}</span>
+                                    </div>
+                                    <div class="product-detail">
+                                        <span class="product-detail-label">Rating</span>
+                                        <span class="product-detail-value">${product.rating || 'N/A'}</span>
+                                    </div>
+                                    <div class="product-detail">
+                                        <span class="product-detail-label">Reviews</span>
+                                        <span class="product-detail-value">${product.review_count || 0}</span>
+                                    </div>
+                                    <div class="product-detail">
+                                        <span class="product-detail-label">URL</span>
+                                        <span class="product-detail-value" style="font-size: 12px; word-break: break-all;">${product.url}</span>
+                                    </div>
+                                </div>
+                            `;
+                            resultsContainer.appendChild(card);
+                        });
+                    }
+
+                    showAlert('success', `Successfully scraped ${data.products_scraped} product(s)!`);
+                    resultsSection.classList.add('active');
+                } else {
+                    showAlert('error', data.error || 'Scraping failed');
+                }
+            } catch (error) {
+                showAlert('error', 'Error: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+                scrapeBtn.disabled = false;
+            }
+        });
+
+        // Load saved selectors on page load
+        loadSelectors();
+    </script>
+</body>
+</html>

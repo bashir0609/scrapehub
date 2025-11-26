@@ -1,0 +1,2089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScrapeHub - Multi-Platform Data Scraper</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Navigation Header */
+        .nav-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-brand:hover {
+            color: #764ba2;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 5px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-menu-item {
+            margin: 0;
+        }
+
+        .nav-menu-link {
+            display: block;
+            padding: 10px 20px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-menu-link:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .nav-menu-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 150px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-section {
+            margin-top: 20px;
+        }
+
+        .response-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-error {
+            background: #ef4444;
+            color: white;
+        }
+
+        .response-content {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example-btn {
+            background: #f0f0f0;
+            color: #333;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .example-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .field-group {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .field-group-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .field-checkbox {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+            cursor: pointer;
+        }
+
+        .field-checkbox:hover {
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .field-checkbox input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .field-checkbox label {
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            flex: 1;
+            margin: 0;
+        }
+
+        .fields-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 5px;
+        }
+
+        #availableFieldsContainer {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav-menu {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .nav-menu-link {
+                padding: 8px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="nav-header">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span>🔍</span>
+                <span>ScrapeHub</span>
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-menu-item">
+                    <a href="/" class="nav-menu-link active">Universal API Client</a>
+                </li>
+                <li class="nav-menu-item">
+                    <a href="/company-social-finder/" class="nav-menu-link">Company Social Finder</a>
+                </li>
+                <li class="nav-menu-item">
+                    <a href="/social-scraper/" class="nav-menu-link">Social Scraper</a>
+                </li>
+                <li class="nav-menu-item">
+                    <a href="/ecommerce-scraper/" class="nav-menu-link">E-commerce Scraper</a>
+                </li>
+                <li class="nav-menu-item">
+                    <a href="/rapidapi-scraper/" class="nav-menu-link">RapidAPI Scraper</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔍 ScrapeHub</h1>
+            <p>Multi-Platform Data Scraping Solution</p>
+            <h2 style="margin-top: 20px; font-size: 1.5em; opacity: 0.95;">Universal API Client</h2>
+            <p style="margin-top: 10px; font-size: 1em; opacity: 0.85;">Connect to any API endpoint from any website</p>
+        </div>
+
+        <!-- Import from Browser Network Tab -->
+        <div class="card" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; color: #0369a1;">🚀 Quick Import from Browser</h3>
+                <button type="button" class="example-btn" id="toggleImportBtn" onclick="toggleImportSection()">
+                    <span id="toggleImportText">Show</span> Import
+                </button>
+            </div>
+            <div id="importSection" style="display: none;">
+                <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">
+                        <strong>How to use:</strong> Open F12 → Network tab → Find your API request → Right-click → Copy → Copy as cURL (or manually copy Headers and Payload)
+                    </p>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="importHeaders">Headers (from F12 → Network → Headers tab)</label>
+                        <textarea id="importHeaders" name="importHeaders" 
+                                  placeholder='Paste from Network tab Headers section. Include:&#10;&#10;1. General section (contains URL and Method):&#10;Request URL: https://example.com/api/endpoint&#10;Request Method: POST&#10;&#10;2. Request Headers section:&#10;Content-Type: application/json&#10;Authorization: Bearer token123&#10;&#10;You can paste the entire Headers tab content, or just the General + Request Headers sections.&#10;&#10;Also supports:&#10;- cURL format&#10;- Raw HTTP headers&#10;- Key-value pairs' 
+                                  style="min-height: 150px;"></textarea>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label for="importPayload">Request Payload/Body (from F12 → Network → Payload tab)</label>
+                        <textarea id="importPayload" name="importPayload" 
+                                  placeholder='Paste request payload/body here (JSON, form data, etc.)&#10;Example:&#10;{"current": 1, "size": 10, "keyword": ""}' 
+                                  style="min-height: 120px;"></textarea>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn" onclick="parseAndImportFromBrowser()" style="flex: 1; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+                            ✨ Parse & Auto-Fill Form
+                        </button>
+                        <button type="button" class="example-btn" onclick="clearImportFields()">
+                            Clear
+                        </button>
+                    </div>
+                    <div id="importStatus" style="margin-top: 10px; padding: 10px; border-radius: 6px; display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <form id="scrapeForm">
+                <div class="form-group">
+                    <label for="url">API URL *</label>
+                    <input type="url" id="url" name="url" required 
+                           placeholder="https://example.com/api/endpoint">
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label for="method">HTTP Method</label>
+                        <select id="method" name="method">
+                            <option value="POST" selected>POST</option>
+                            <option value="GET">GET</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+
+                <div class="form-group">
+                    <label for="headers">Headers (JSON, optional)</label>
+                    <textarea id="headers" name="headers" 
+                              placeholder='{"Content-Type": "application/json", "Authorization": "Basic ..."}'></textarea>
+                    <button type="button" class="example-btn" onclick="loadExampleHeaders()">
+                        Load Example Headers
+                    </button>
+                </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="data">Request Data (JSON) *</label>
+                    <textarea id="data" name="data" required 
+                              placeholder='{"current": 1, "size": 10, "mainProductList": [], "keyword": ""}'></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button type="button" class="example-btn" onclick="loadExample()">
+                            Load Example Data
+                        </button>
+                        <button type="button" class="example-btn" onclick="loadExample(); loadExampleHeaders();">
+                            Load Full Example
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="fields">Fields to Keep (Optional)</label>
+                    <textarea id="fields" name="fields" 
+                              placeholder='Enter field names separated by commas or newlines. Use dot notation for nested fields.&#10;Examples:&#10;name, email, phone&#10;exhibitor.name, exhibitor.address.city, exhibitor.id'></textarea>
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                        Leave empty to keep all fields. Use dot notation for nested fields (e.g., "exhibitor.name").
+                        <br>After scraping, you can view and select available fields below.
+                    </small>
+                </div>
+
+                <div id="availableFieldsSection" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0;">Available Fields</h4>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="example-btn" id="selectAllFieldsBtn" style="margin: 0;">Select All</button>
+                            <button type="button" class="example-btn" id="deselectAllFieldsBtn" style="margin: 0;">Deselect All</button>
+                            <button type="button" class="example-btn" id="applySelectedFieldsBtn" style="margin: 0; background: #667eea; color: white;">Apply Selected</button>
+                        </div>
+                    </div>
+                    <div id="availableFieldsContainer" style="max-height: 400px; overflow-y: auto;">
+                        <p style="color: #666; font-style: italic;">Loading available fields...</p>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="scrapeAllPages" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span style="color: #333; font-size: 14px;">Scrape All Pages (with pagination)</span>
+                    </label>
+                    <button type="submit" class="btn" id="submitBtn" style="flex: 1; margin-left: auto;">
+                        Scrape API
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;">Scraping data...</p>
+            </div>
+
+            <div class="response-section" id="responseSection" style="display: none;">
+                <div class="response-header">
+                    <h3>Response</h3>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span class="status-badge" id="statusBadge"></span>
+                        <button type="button" class="example-btn" id="exportCsvBtn" style="display: none;">
+                            Export CSV
+                        </button>
+                        <button type="button" class="example-btn" id="exportJsonBtn" style="display: none;">
+                            Export JSON
+                        </button>
+                    </div>
+                </div>
+                <div class="response-content">
+                    <pre id="responseContent"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('scrapeForm');
+        const loading = document.getElementById('loading');
+        const responseSection = document.getElementById('responseSection');
+        const responseContent = document.getElementById('responseContent');
+        const statusBadge = document.getElementById('statusBadge');
+        const submitBtn = document.getElementById('submitBtn');
+        const scrapeAllPagesCheckbox = document.getElementById('scrapeAllPages');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const exportJsonBtn = document.getElementById('exportJsonBtn');
+        let currentRequestId = null;
+
+        function loadExample() {
+            document.getElementById('url').value = 'https://ezt3.eastfair.com/api/ef-exhibitor-self-service/client/exhibitorJournal/v2/pageWhenElectronicJournal';
+            document.getElementById('method').value = 'POST';
+            document.getElementById('data').value = JSON.stringify({
+                current: 1,
+                size: 10,
+                mainProductList: [],
+                keyword: ""
+            }, null, 2);
+        }
+
+        function loadExampleHeaders() {
+            document.getElementById('headers').value = JSON.stringify({
+                "Content-Type": "application/json;charset=UTF-8",
+                "Authorization": "Basic c2FiZXI6c2FiZXJfc2VjcmV0",
+                "exhibitionid": "1906957333732372482",
+                "languagetype": "en",
+                "registertype": "exhibitorDept",
+                "tenantid": "100313",
+                "user-type": "app",
+                "Accept": "application/json, text/plain, */*",
+                "Origin": "https://ezt3.eastfair.com",
+                "Referer": "https://ezt3.eastfair.com/journal-hk/",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+            }, null, 2);
+        }
+
+        function toggleImportSection() {
+            const section = document.getElementById('importSection');
+            const toggleText = document.getElementById('toggleImportText');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                toggleText.textContent = 'Hide';
+            } else {
+                section.style.display = 'none';
+                toggleText.textContent = 'Show';
+            }
+        }
+
+        function clearImportFields() {
+            document.getElementById('importHeaders').value = '';
+            document.getElementById('importPayload').value = '';
+            document.getElementById('importStatus').style.display = 'none';
+        }
+
+        function parseAndImportFromBrowser() {
+            let headersText = document.getElementById('importHeaders').value.trim();
+            let payloadText = document.getElementById('importPayload').value.trim();
+            const statusDiv = document.getElementById('importStatus');
+            
+            statusDiv.style.display = 'block';
+            statusDiv.style.background = '#f0f9ff';
+            statusDiv.style.color = '#0369a1';
+            statusDiv.innerHTML = '⏳ Parsing...';
+
+            try {
+                // Smart detection: if headers field is empty but payload has content that looks like headers
+                if (!headersText && payloadText) {
+                    // Check if payload contains header-like content
+                    if (payloadText.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/i) || 
+                        payloadText.match(/^[A-Za-z-]+:\s*.+$/m) ||
+                        payloadText.includes('curl ')) {
+                        // Swap them - payload field actually contains headers
+                        headersText = payloadText;
+                        payloadText = '';
+                    }
+                }
+
+                // If headers field contains both headers and payload (common in network tab copy)
+                if (headersText && !payloadText) {
+                    const separated = separateHeadersAndPayload(headersText);
+                    if (separated.payload) {
+                        headersText = separated.headers;
+                        payloadText = separated.payload;
+                    }
+                }
+
+                let extractedData = {
+                    url: '',
+                    method: 'POST',
+                    headers: {},
+                    payload: {}
+                };
+
+                // Parse headers
+                if (headersText) {
+                    const headerData = parseHeaders(headersText);
+                    console.log('Parsed header data:', headerData);
+                    console.log('URL:', headerData.url);
+                    console.log('Method:', headerData.method);
+                    console.log('Headers:', headerData.headers);
+                    extractedData.url = headerData.url || extractedData.url;
+                    extractedData.method = headerData.method || extractedData.method;
+                    extractedData.headers = headerData.headers || {};
+                    
+                    // For GET requests, extract query parameters from URL and move to payload
+                    if (extractedData.method === 'GET' && extractedData.url) {
+                        try {
+                            // Check if URL has query parameters
+                            const urlParts = extractedData.url.split('?');
+                            if (urlParts.length > 1) {
+                                const queryString = urlParts.slice(1).join('?'); // In case there are multiple ? (unlikely but safe)
+                                const queryParams = {};
+                                
+                                // Parse query string using URLSearchParams
+                                if (typeof URLSearchParams !== 'undefined') {
+                                    const params = new URLSearchParams(queryString);
+                                    params.forEach((value, key) => {
+                                        queryParams[key] = value;
+                                    });
+                                } else {
+                                    // Fallback: manual parsing
+                                    queryString.split('&').forEach(param => {
+                                        const [key, value] = param.split('=');
+                                        if (key) {
+                                            queryParams[decodeURIComponent(key)] = value ? decodeURIComponent(value) : '';
+                                        }
+                                    });
+                                }
+                                
+                                // Remove query string from URL
+                                extractedData.url = urlParts[0];
+                                
+                                // Replace payload with query params (for GET requests, query params are the payload)
+                                if (Object.keys(queryParams).length > 0) {
+                                    extractedData.payload = queryParams;
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('Could not parse URL for query parameters:', e);
+                        }
+                    }
+                }
+
+                // Parse payload
+                if (payloadText) {
+                    extractedData.payload = parsePayload(payloadText);
+                }
+
+                // Populate form fields (even if URL is missing, populate what we have)
+                if (extractedData.url) {
+                    document.getElementById('url').value = extractedData.url;
+                } else {
+                    // Try one more time to find URL in the entire text
+                    const allText = headersText + '\n' + payloadText;
+                    const urlMatch = allText.match(/(https?:\/\/[^\s\n\r"']+)/i);
+                    if (urlMatch) {
+                        extractedData.url = urlMatch[1].trim();
+                        document.getElementById('url').value = extractedData.url;
+                    }
+                }
+                
+                if (extractedData.method) {
+                    document.getElementById('method').value = extractedData.method;
+                }
+
+                // Populate headers
+                if (Object.keys(extractedData.headers).length > 0) {
+                    document.getElementById('headers').value = JSON.stringify(extractedData.headers, null, 2);
+                }
+                
+                // Populate payload
+                if (Object.keys(extractedData.payload).length > 0) {
+                    document.getElementById('data').value = JSON.stringify(extractedData.payload, null, 2);
+                } else if (payloadText) {
+                    // If payload couldn't be parsed as JSON, try to use it as-is
+                    try {
+                        const parsed = JSON.parse(payloadText);
+                        document.getElementById('data').value = JSON.stringify(parsed, null, 2);
+                    } catch {
+                        document.getElementById('data').value = payloadText;
+                    }
+                }
+
+                // Validate URL after all attempts
+                if (!extractedData.url) {
+                    statusDiv.style.background = '#fef3c7';
+                    statusDiv.style.color = '#92400e';
+                    statusDiv.innerHTML = `⚠️ Could not extract URL automatically.<br>
+                        <strong>Method:</strong> ${extractedData.method || 'Not found'}<br>
+                        <strong>Headers:</strong> ${Object.keys(extractedData.headers).length} header(s) found<br>
+                        <strong>Payload:</strong> ${Object.keys(extractedData.payload).length > 0 ? 'Parsed' : payloadText ? 'Raw text' : 'None'}<br><br>
+                        <strong>Please manually enter the API URL above.</strong>`;
+                    document.getElementById('url').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return;
+                }
+
+                // Show success message
+                statusDiv.style.background = '#d1fae5';
+                statusDiv.style.color = '#065f46';
+                statusDiv.innerHTML = `✅ Successfully imported!<br>
+                    <strong>URL:</strong> ${extractedData.url}<br>
+                    <strong>Method:</strong> ${extractedData.method}<br>
+                    <strong>Headers:</strong> ${Object.keys(extractedData.headers).length} header(s)<br>
+                    <strong>Payload:</strong> ${Object.keys(extractedData.payload).length > 0 ? 'Parsed' : payloadText ? 'Raw text' : 'None'}`;
+
+                // Scroll to form
+                document.getElementById('url').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            } catch (error) {
+                statusDiv.style.background = '#fee2e2';
+                statusDiv.style.color = '#991b1b';
+                statusDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+
+        function separateHeadersAndPayload(text) {
+            const result = {
+                headers: text,
+                payload: ''
+            };
+
+            // Look for common separators between headers and payload
+            const separators = [
+                /\n\n/,  // Double newline
+                /\r\n\r\n/,  // Double CRLF
+                /Request Payload:/i,
+                /Request Body:/i,
+                /Body:/i,
+                /Payload:/i,
+                /Form Data:/i,
+                /JSON:/i
+            ];
+
+            for (const separator of separators) {
+                const match = text.match(separator);
+                if (match) {
+                    const index = match.index + match[0].length;
+                    result.headers = text.substring(0, match.index).trim();
+                    result.payload = text.substring(index).trim();
+                    break;
+                }
+            }
+
+            // If no separator found, try to detect JSON payload at the end
+            const jsonMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])$/);
+            if (jsonMatch && !result.payload) {
+                const jsonStart = text.lastIndexOf(jsonMatch[0]);
+                // Check if there's header-like content before the JSON
+                const beforeJson = text.substring(0, jsonStart).trim();
+                if (beforeJson.match(/^[A-Za-z-]+:\s*.+$/m) || beforeJson.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/i)) {
+                    result.headers = beforeJson;
+                    result.payload = jsonMatch[0];
+                }
+            }
+
+            return result;
+        }
+
+        function parseHeaders(headersText) {
+            const result = {
+                url: '',
+                method: 'POST',
+                headers: {}
+            };
+
+            // Try to detect cURL format
+            if (headersText.includes('curl ') || headersText.includes('curl\n')) {
+                return parseCurlFormat(headersText);
+            }
+
+            // Split into sections: General, Request Headers, Response Headers
+            const sections = {
+                general: '',
+                requestHeaders: '',
+                responseHeaders: ''
+            };
+
+            // Try to identify sections
+            const generalMatch = headersText.match(/General[:\s]*([\s\S]*?)(?=Request Headers|Response Headers|$)/i);
+            if (generalMatch) {
+                sections.general = generalMatch[1].trim();
+            }
+
+            const requestHeadersMatch = headersText.match(/Request Headers[:\s]*([\s\S]*?)(?=Response Headers|General|$)/i);
+            if (requestHeadersMatch) {
+                sections.requestHeaders = requestHeadersMatch[1].trim();
+            }
+
+            const responseHeadersMatch = headersText.match(/Response Headers[:\s]*([\s\S]*?)(?=Request Headers|General|$)/i);
+            if (responseHeadersMatch) {
+                sections.responseHeaders = responseHeadersMatch[1].trim();
+            }
+            
+            // If no explicit sections found, try to detect Request vs Response headers by content
+            if (!sections.general && !sections.requestHeaders && !sections.responseHeaders) {
+                // Look for Request URL and Method at the start
+                const urlMatch = headersText.match(/(?:Request\s+)?URL[:\s]*(https?:\/\/[^\s\n\r"']+)/i);
+                const methodMatch = headersText.match(/(?:Request\s+)?Method[:\s]*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i);
+                
+                if (urlMatch) {
+                    result.url = urlMatch[1].trim();
+                }
+                if (methodMatch) {
+                    result.method = methodMatch[1].toUpperCase();
+                }
+                
+                // Split text into lines and identify Request Headers section
+                // Response headers typically come after Status Code and include: access-control-*, cache-control, content-*, date, server, etc.
+                // Request headers typically include: accept, accept-*, apikey, authorization, user-agent, origin, referer, host, etc.
+                const lines = headersText.split('\n');
+                let inRequestHeaders = false;
+                let requestHeadersStart = -1;
+                let responseHeadersStart = -1;
+                
+                // Common Response Header patterns
+                const responseHeaderPatterns = [
+                    /^access-control-/, /^cache-control/, /^content-/, /^date$/i, /^server$/i,
+                    /^strict-transport-security/, /^vary$/i, /^x-content-type-options/,
+                    /^x-frame-options/, /^x-request-id/, /^feature-policy/, /^p3p$/i,
+                    /^referrer-policy/, /^content-security-policy/
+                ];
+                
+                // Common Request Header patterns
+                const requestHeaderPatterns = [
+                    /^accept$/i, /^accept-/, /^apikey$/i, /^api-key$/i, /^authorization$/i,
+                    /^user-agent$/i, /^origin$/i, /^referer$/i, /^host$/i, /^connection$/i,
+                    /^sec-ch-ua/, /^sec-fetch-/, /^cookie$/i, /^content-type$/i, /^content-length$/i
+                ];
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    // Skip metadata lines
+                    if (line.match(/^(Request URL|Request Method|Status Code|Remote Address|Referrer Policy)/i)) {
+                        continue;
+                    }
+                    
+                    // Check if this looks like a header line
+                    const headerMatch = line.match(/^([^:]+):\s*(.+)$/);
+                    if (headerMatch) {
+                        const key = headerMatch[1].trim().toLowerCase();
+                        
+                        // If we hit a response header and haven't found request headers yet, mark response section
+                        if (responseHeaderPatterns.some(pattern => pattern.test(key))) {
+                            if (responseHeadersStart === -1) {
+                                responseHeadersStart = i;
+                            }
+                            // If we were in request headers, we've moved to response headers
+                            if (inRequestHeaders) {
+                                break;
+                            }
+                        }
+                        
+                        // If we hit a request header pattern
+                        if (requestHeaderPatterns.some(pattern => pattern.test(key))) {
+                            if (requestHeadersStart === -1 && responseHeadersStart === -1) {
+                                // Request headers before any response headers
+                                requestHeadersStart = i;
+                                inRequestHeaders = true;
+                            } else if (responseHeadersStart !== -1 && requestHeadersStart === -1) {
+                                // Request headers after response headers (unusual but possible)
+                                requestHeadersStart = i;
+                                inRequestHeaders = true;
+                            }
+                        }
+                    }
+                }
+                
+                // Extract Request Headers section
+                if (requestHeadersStart !== -1) {
+                    // Find where request headers end (either at response headers or end of text)
+                    let requestHeadersEnd = lines.length;
+                    if (responseHeadersStart !== -1 && responseHeadersStart > requestHeadersStart) {
+                        requestHeadersEnd = responseHeadersStart;
+                    }
+                    sections.requestHeaders = lines.slice(requestHeadersStart, requestHeadersEnd).join('\n').trim();
+                    console.log('Auto-detected Request Headers section:', sections.requestHeaders.substring(0, 200));
+                } else {
+                    // Fallback: if no clear request headers found, parse everything but skip known response headers
+                    // This happens when headers are mixed and we can't clearly identify sections
+                    sections.requestHeaders = headersText;
+                    console.log('Using fallback: parsing all headers and filtering response headers');
+                }
+            }
+
+            // If sections were found, parse them separately
+            // ALWAYS parse request headers if we have them, even if general section wasn't found
+            if (sections.requestHeaders || sections.general) {
+                // Extract URL and Method from General section (if not already extracted)
+                if (sections.general && !result.url) {
+                    // Look for URL in General section - capture full URL including query parameters
+                    const urlPatterns = [
+                        /(?:Request\s+)?URL:?\s*(https?:\/\/[^\s\n\r"']+)/i,
+                        /URL:?\s*(https?:\/\/[^\s\n\r"']+)/i,
+                        /(https?:\/\/[^\s\n\r"']+)/i
+                    ];
+                    
+                    for (const pattern of urlPatterns) {
+                        const match = sections.general.match(pattern);
+                        if (match) {
+                            result.url = (match[1] || match[0]).trim();
+                            // Clean up URL - but preserve query parameters
+                            // Only remove trailing punctuation that's clearly not part of URL
+                            result.url = result.url.replace(/[.,;)\]}]+$/, '').trim();
+                            if (result.url && !result.url.startsWith('http')) {
+                                result.url = 'https://' + result.url;
+                            }
+                            if (result.url) break;
+                        }
+                    }
+                }
+                
+                // Extract Method from General section (if not already extracted)
+                if (sections.general && !result.method) {
+                    const methodPatterns = [
+                        /(?:Request\s+)?Method:?\s*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i,
+                        /Method:?\s*([A-Z]+)/i
+                    ];
+                    
+                    for (const pattern of methodPatterns) {
+                        const match = sections.general.match(pattern);
+                        if (match) {
+                            result.method = (match[1] || match[0]).toUpperCase();
+                            break;
+                        }
+                    }
+                }
+                
+                // If URL/method not found in general section, try to extract from full text
+                if (!result.url) {
+                    const urlMatch = headersText.match(/(?:Request\s+)?URL[:\s]*(https?:\/\/[^\s\n\r"']+)/i);
+                    if (urlMatch) {
+                        result.url = urlMatch[1].trim();
+                    }
+                }
+                if (!result.method) {
+                    const methodMatch = headersText.match(/(?:Request\s+)?Method[:\s]*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i);
+                    if (methodMatch) {
+                        result.method = methodMatch[1].toUpperCase();
+                    }
+                }
+
+                // Extract headers from Request Headers section
+                if (sections.requestHeaders) {
+                    console.log('Parsing Request Headers section, length:', sections.requestHeaders.length);
+                    result.headers = parseHeaderSection(sections.requestHeaders);
+                    console.log('Parsed headers count:', Object.keys(result.headers).length);
+                    console.log('Parsed headers:', result.headers);
+                } else {
+                    // If no Request Headers section, try to parse the whole text as headers
+                    console.log('No Request Headers section found, parsing entire text');
+                    result.headers = parseHeaderSection(headersText);
+                    console.log('Parsed headers count:', Object.keys(result.headers).length);
+                    console.log('Parsed headers:', result.headers);
+                }
+            } else {
+                // No sections found, try to parse the entire text
+                // First, try to extract URL and method from common browser network tab formats
+                const urlPatterns = [
+                    /(?:Request\s+)?URL:?\s*(https?:\/\/[^\s\n\r"']+)/i,
+                    /(?:Request\s+)?URL:?\s*(https?:\/\/[^\s\n\r"']+)/i,
+                    /URL\s*=\s*(https?:\/\/[^\s\n\r"']+)/i,
+                    /(?:GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+(https?:\/\/[^\s\n\r"']+)/i
+                ];
+                
+                for (const pattern of urlPatterns) {
+                    const match = headersText.match(pattern);
+                    if (match) {
+                        result.url = (match[1] || match[0]).trim();
+                        // Clean up URL - preserve query parameters
+                        result.url = result.url.replace(/[.,;)\]}]+$/, '').trim();
+                        if (result.url && !result.url.startsWith('http')) {
+                            result.url = 'https://' + result.url;
+                        }
+                        break;
+                    }
+                }
+
+                // Look for HTTP method in various formats
+                const methodPatterns = [
+                    /(?:Request\s+)?Method:?\s*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i,
+                    /Method\s*=\s*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i,
+                    /^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/im
+                ];
+                
+                for (const pattern of methodPatterns) {
+                    const match = headersText.match(pattern);
+                    if (match) {
+                        result.method = match[1].toUpperCase();
+                        break;
+                    }
+                }
+
+                // Parse headers from the entire text
+                result.headers = parseHeaderSection(headersText);
+            }
+
+            // If sections were not found, try to parse raw HTTP request format
+            if (!sections.general && !sections.requestHeaders) {
+                const lines = headersText.split('\n').map(l => l.trim()).filter(l => l);
+                
+                // Check for HTTP request line (GET /path HTTP/1.1 or POST /path HTTP/1.1)
+                const firstLine = lines[0];
+                const httpRequestMatch = firstLine.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+(.+?)(?:\s+HTTP\/[\d.]+)?$/i);
+                if (httpRequestMatch) {
+                    if (!result.method) {
+                        result.method = httpRequestMatch[1].toUpperCase();
+                    }
+                    const path = httpRequestMatch[2].trim();
+                    
+                    // If we don't have a URL yet, try to construct it
+                    if (!result.url) {
+                        // Try to extract full URL from subsequent Host header
+                        let host = '';
+                        for (let i = 1; i < lines.length; i++) {
+                            const hostMatch = lines[i].match(/^host:?\s*(.+)$/i);
+                            if (hostMatch) {
+                                host = hostMatch[1].trim();
+                                break;
+                            }
+                        }
+                        if (host) {
+                            const protocol = path.startsWith('http') ? '' : 'https://';
+                            result.url = path.startsWith('http') ? path : `${protocol}${host}${path.startsWith('/') ? '' : '/'}${path}`;
+                        } else {
+                            // If no host found, check if path is already a full URL
+                            result.url = path.startsWith('http') ? path : '';
+                        }
+                    }
+                }
+            }
+
+            // Try to extract URL from the text if not found yet (fallback)
+            if (!result.url) {
+                // Look for URL patterns - more comprehensive
+                const urlPatterns = [
+                    /(?:Request\s+)?URL:?\s*(https?:\/\/[^\s\n\r"']+)/i,
+                    /(?:GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+(https?:\/\/[^\s\n\r"']+)/i,
+                    /https?:\/\/[^\s\n\r"']+/i
+                ];
+                
+                for (const pattern of urlPatterns) {
+                    const match = headersText.match(pattern);
+                    if (match) {
+                        result.url = (match[1] || match[0]).trim();
+                        // Clean up URL (remove trailing characters that might be part of the match)
+                        result.url = result.url.replace(/[.,;)\]}]+$/, '').trim();
+                        if (result.url) break;
+                    }
+                }
+                
+                // Last resort: try to find any URL-like pattern
+                if (!result.url) {
+                    const anyUrlMatch = headersText.match(/(https?:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}[^\s\n\r"']*)/i);
+                    if (anyUrlMatch) {
+                        result.url = anyUrlMatch[1].trim();
+                    }
+                }
+            }
+            
+            // If we have a method but no URL, try to extract from method line
+            if (result.method && !result.url) {
+                const methodLineMatch = headersText.match(new RegExp(`^${result.method}\\s+(https?://[^\\s\\n]+)`, 'im'));
+                if (methodLineMatch) {
+                    result.url = methodLineMatch[1].trim();
+                }
+            }
+
+            // Clean up headers - remove common browser headers that might not be needed
+            const headersToSkip = ['host', 'connection', 'content-length', 'accept-encoding', 'sec-fetch-dest', 'sec-fetch-mode', 'sec-fetch-site', 'sec-ch-ua', 'sec-ch-ua-mobile', 'sec-ch-ua-platform'];
+            const cleanedHeaders = {};
+            for (const [key, value] of Object.entries(result.headers)) {
+                const keyLower = key.toLowerCase();
+                
+                // Skip invalid headers
+                if (keyLower === 'https' || keyLower === 'http' || 
+                    keyLower.length < 4 || 
+                    /^\d+\.\d+\.\d+\.\d+/.test(key) ||
+                    keyLower.includes('://') ||
+                    (typeof value === 'string' && value.includes('://') && keyLower.length < 4)) {
+                    continue;
+                }
+                
+                if (!headersToSkip.includes(keyLower)) {
+                    cleanedHeaders[key] = value;
+                }
+            }
+            result.headers = cleanedHeaders;
+
+            return result;
+        }
+
+        function parseHeaderSection(headerText) {
+            console.log('parseHeaderSection called with text length:', headerText.length);
+            const headers = {};
+            const lines = headerText.split('\n').map(l => l.trim()).filter(l => l);
+            console.log('Total lines to process:', lines.length);
+
+            // List of non-header fields to skip (from browser network tab)
+            const nonHeaderFields = [
+                'request url', 'request method', 'status code', 'remote address', 
+                'referrer policy', 'scheme', 'initiator', 'priority', 'request id',
+                'timestamp', 'wall time', 'request headers', 'response headers',
+                'general', 'query string parameters', 'form data', 'payload',
+                'provisional headers', 'view source', 'view parsed'
+            ];
+            
+            // Response headers to skip (these should not be sent in requests)
+            const responseHeaderPatterns = [
+                /^access-control-/, /^cache-control$/i, /^content-encoding$/i, /^content-length$/i,
+                /^content-security-policy/i, /^date$/i, /^feature-policy$/i, /^p3p$/i,
+                /^referrer-policy$/i, /^server$/i, /^strict-transport-security/i,
+                /^vary$/i, /^x-content-type-options$/i, /^x-frame-options$/i, /^x-request-id$/i
+            ];
+
+            // Common valid HTTP header names (case-insensitive)
+            const validHeaderNames = [
+                'accept', 'accept-charset', 'accept-encoding', 'accept-language',
+                'authorization', 'cache-control', 'connection', 'content-length',
+                'content-type', 'cookie', 'host', 'if-modified-since', 'if-none-match',
+                'origin', 'referer', 'referrer', 'user-agent', 'x-requested-with',
+                'apikey', 'api-key', 'x-api-key', 'x-auth-token', 'x-csrf-token',
+                'sec-fetch-dest', 'sec-fetch-mode', 'sec-fetch-site', 'sec-ch-ua',
+                'sec-ch-ua-mobile', 'sec-ch-ua-platform'
+            ];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                
+                // Skip HTTP request line
+                if (line.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/i)) {
+                    continue;
+                }
+                
+                // Skip empty lines
+                if (!line) continue;
+
+                // Skip lines that are clearly URLs
+                if (line.match(/^https?:\/\//i)) {
+                    continue;
+                }
+                
+                // Skip lines that start with "https:" or "http:" (malformed header lines)
+                if (line.match(/^(https?):\s*/i)) {
+                    continue;
+                }
+
+                // Try to match "Header-Name: value" format
+                // Also handle format where header name and value are on separate lines (browser network tab format)
+                let headerMatch = line.match(/^([^:]+):\s*(.+)$/);
+                
+                // If no colon match, check if this line looks like a header name (next line might be the value)
+                if (!headerMatch && i < lines.length - 1) {
+                    const nextLine = lines[i + 1];
+                    // If current line is a potential header name and next line is not a header name (no colon), treat as header:value pair
+                    if (line.match(/^[a-z][a-z0-9-]*$/i) && !nextLine.match(/^[^:]+:\s*.+$/)) {
+                        headerMatch = [null, line, nextLine];
+                        i++; // Skip next line since we consumed it
+                    }
+                }
+                
+                if (headerMatch) {
+                    const key = headerMatch[1].trim();
+                    const value = headerMatch[2].trim();
+                    
+                    // Skip if key is empty or value is empty
+                    if (!key || !value) {
+                        continue;
+                    }
+                    
+                    const keyLower = key.toLowerCase();
+                    
+                    // Skip non-header fields
+                    if (nonHeaderFields.some(field => keyLower.includes(field))) {
+                        continue;
+                    }
+                    
+                    // Skip response headers (these should not be sent in requests)
+                    if (responseHeaderPatterns.some(pattern => pattern.test(keyLower))) {
+                        console.log('Skipping response header:', key);
+                        continue;
+                    }
+                    
+                    // Skip lines that look like IP addresses or ports in key
+                    if (/^\d+\.\d+\.\d+\.\d+/.test(key) || /^\d+$/.test(key)) {
+                        continue;
+                    }
+                    
+                    // Skip if key looks like a URL or path
+                    if (keyLower.includes('://') || keyLower.startsWith('/') || keyLower.includes('.com') || keyLower.includes('.org')) {
+                        continue;
+                    }
+                    
+                    // Skip if value looks like a URL and key is suspicious
+                    if (value.includes('://') && (keyLower === 'https' || keyLower === 'http' || keyLower.length < 3)) {
+                        continue;
+                    }
+                    
+                    // Skip single-word keys that are too short or suspicious (like "https", "http", IP addresses)
+                    if (keyLower.length < 4 && !['host', 'user-agent', 'x-id', 'x-key'].some(h => keyLower.includes(h))) {
+                        continue;
+                    }
+                    
+                    // Skip if key is just "https" or "http"
+                    if (keyLower === 'https' || keyLower === 'http') {
+                        continue;
+                    }
+                    
+                    // Only accept valid HTTP headers
+                    // Check if it's a known header name, or follows HTTP header naming conventions
+                    // Be more lenient - accept any header that looks like a valid HTTP header name
+                    const isValidHeader = 
+                        validHeaderNames.some(name => keyLower === name || keyLower.startsWith(name + '-')) ||
+                        (key.match(/^[a-z][a-z0-9-]*$/i) && key.length >= 2) || // Standard header format: at least 2 chars, starts with letter, contains only letters/numbers/hyphens
+                        keyLower.startsWith('x-') || // Custom headers (x-*)
+                        keyLower === 'apikey' || keyLower === 'api-key' || keyLower === 'api_key';
+                    
+                    if (isValidHeader) {
+                        headers[key] = value;
+                        console.log('✓ Added header:', key, '=', value.substring(0, 50));
+                    } else {
+                        console.log('✗ Rejected header (not valid):', key, 'value:', value.substring(0, 30));
+                    }
+                }
+            }
+
+            // Try to parse as JSON if no headers were found
+            if (Object.keys(headers).length === 0) {
+                try {
+                    const parsed = JSON.parse(headerText);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        // Filter out invalid headers from JSON too
+                        const filtered = {};
+                        for (const [key, value] of Object.entries(parsed)) {
+                            const keyLower = key.toLowerCase();
+                            
+                            // Skip invalid keys
+                            if (keyLower === 'https' || keyLower === 'http' || keyLower.length < 4) {
+                                continue;
+                            }
+                            
+                            // Skip if value looks like a URL and key is suspicious
+                            if (typeof value === 'string' && value.includes('://') && (keyLower.length < 4 || keyLower.includes('://'))) {
+                                continue;
+                            }
+                            
+                            if (!nonHeaderFields.some(field => keyLower.includes(field)) &&
+                                !key.match(/^\d+\.\d+\.\d+\.\d+/) &&
+                                !keyLower.includes('://') &&
+                                (validHeaderNames.some(name => keyLower === name || keyLower.startsWith(name + '-')) ||
+                                 (key.match(/^[a-z][a-z0-9-]{2,}$/i) && key.length >= 4) ||
+                                 keyLower.startsWith('x-') ||
+                                 keyLower === 'apikey' || keyLower === 'api-key')) {
+                                filtered[key] = value;
+                            }
+                        }
+                        return filtered;
+                    }
+                } catch (e) {
+                    // Not JSON, return empty headers
+                }
+            }
+
+            return headers;
+        }
+
+        function parseCurlFormat(curlText) {
+            const result = {
+                url: '',
+                method: 'POST',
+                headers: {}
+            };
+
+            // Extract method
+            const methodMatch = curlText.match(/-X\s+(\w+)/i);
+            if (methodMatch) {
+                result.method = methodMatch[1].toUpperCase();
+            }
+
+            // Extract URL (usually in quotes after curl command)
+            const urlMatch = curlText.match(/curl\s+(?:-X\s+\w+\s+)?["']?([^"'\s]+)["']?/i) || 
+                            curlText.match(/["'](https?:\/\/[^"'\s]+)["']/i) ||
+                            curlText.match(/(https?:\/\/[^\s\n]+)/i);
+            if (urlMatch) {
+                result.url = urlMatch[1] || urlMatch[0];
+            }
+
+            // Extract headers (-H "Header: value")
+            const headerMatches = curlText.matchAll(/-H\s+["']([^"']+)["']/gi);
+            for (const match of headerMatches) {
+                const headerLine = match[1];
+                const headerMatch = headerLine.match(/^([^:]+):\s*(.+)$/);
+                if (headerMatch) {
+                    result.headers[headerMatch[1].trim()] = headerMatch[2].trim();
+                }
+            }
+
+            // Extract data (-d or --data)
+            const dataMatch = curlText.match(/(?:-d|--data)\s+["'](.+?)["']/s);
+            if (dataMatch) {
+                // This will be handled by parsePayload
+            }
+
+            return result;
+        }
+
+        function parsePayload(payloadText) {
+            if (!payloadText.trim()) {
+                return {};
+            }
+
+            // Try to parse as JSON
+            try {
+                const parsed = JSON.parse(payloadText);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    return parsed;
+                }
+            } catch (e) {
+                // Not valid JSON, try other formats
+            }
+
+            // Try to parse as form data (key=value&key2=value2)
+            if (payloadText.includes('=') && (payloadText.includes('&') || payloadText.split('\n').length === 1)) {
+                const formData = {};
+                const pairs = payloadText.split('&');
+                for (const pair of pairs) {
+                    const [key, value] = pair.split('=');
+                    if (key && key.trim()) {
+                        try {
+                            formData[decodeURIComponent(key.trim())] = value ? decodeURIComponent(value.trim()) : '';
+                        } catch (e) {
+                            formData[key.trim()] = value ? value.trim() : '';
+                        }
+                    }
+                }
+                if (Object.keys(formData).length > 0) {
+                    return formData;
+                }
+            }
+
+            // Try to parse as URL-encoded form data (multiline)
+            if (payloadText.includes('=') && payloadText.includes('\n')) {
+                const formData = {};
+                const lines = payloadText.split('\n');
+                for (const line of lines) {
+                    if (line.includes('=')) {
+                        const [key, ...valueParts] = line.split('=');
+                        const value = valueParts.join('=');
+                        if (key && key.trim()) {
+                            try {
+                                formData[decodeURIComponent(key.trim())] = value ? decodeURIComponent(value.trim()) : '';
+                            } catch (e) {
+                                formData[key.trim()] = value ? value.trim() : '';
+                            }
+                        }
+                    }
+                }
+                if (Object.keys(formData).length > 0) {
+                    return formData;
+                }
+            }
+
+            // Try to extract JSON from text that might have extra content
+            const jsonMatch = payloadText.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+            if (jsonMatch) {
+                try {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        return parsed;
+                    }
+                } catch (e) {
+                    // Not valid JSON
+                }
+            }
+
+            // Return empty object if can't parse
+            return {};
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = document.getElementById('url').value;
+            const method = document.getElementById('method').value;
+            const dataText = document.getElementById('data').value;
+            const headersText = document.getElementById('headers').value;
+            const fieldsText = document.getElementById('fields').value;
+            const scrapeAllPages = scrapeAllPagesCheckbox.checked;
+
+            // Parse JSON data
+            let requestData;
+            let headers = {};
+            let fields = [];
+            
+            try {
+                requestData = JSON.parse(dataText);
+            } catch (error) {
+                alert('Invalid JSON in Request Data field');
+                return;
+            }
+
+            if (headersText.trim()) {
+                try {
+                    headers = JSON.parse(headersText);
+                } catch (error) {
+                    alert('Invalid JSON in Headers field');
+                    return;
+                }
+            }
+
+            // Parse fields (comma or newline separated)
+            if (fieldsText.trim()) {
+                fields = fieldsText.split(/[,\n]/)
+                    .map(f => f.trim())
+                    .filter(f => f.length > 0);
+            }
+
+            // If "Scrape All Pages" is checked, use paginated endpoint
+            if (scrapeAllPages) {
+                // Use the scrape all pages logic
+                loading.classList.add('active');
+                const loadingText = loading.querySelector('p');
+                loadingText.textContent = 'Starting scraping...';
+                responseSection.style.display = 'none';
+                submitBtn.disabled = true;
+
+                // Create progress display
+                const progressDiv = document.createElement('div');
+                progressDiv.id = 'progress-display';
+                progressDiv.style.cssText = 'margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 8px; font-family: monospace;';
+                progressDiv.innerHTML = '<div id="progress-message">Initializing...</div><div id="progress-bar-container" style="margin-top: 10px; background: #ddd; border-radius: 4px; height: 20px; overflow: hidden;"><div id="progress-bar" style="background: linear-gradient(90deg, #4CAF50, #45a049); height: 100%; width: 0%; transition: width 0.3s;"></div></div><div id="progress-stats" style="margin-top: 10px; font-size: 0.9em; color: #666;"></div>';
+                loading.appendChild(progressDiv);
+
+                let jobId = null;
+                let progressInterval = null;
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 600000);
+                    
+                    const response = await fetch('/api/scrape-paginated/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            url: url,
+                            method: method,
+                            data: requestData,
+                            headers: headers,
+                            delay: 1.0,
+                            fields: fields.length > 0 ? fields : null
+                        }),
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+
+                    let result;
+                    try {
+                        result = await response.json();
+                    } catch (jsonError) {
+                        throw new Error(`Failed to parse response: ${jsonError.message}. Status: ${response.status}`);
+                    }
+
+                    if (result.job_id) {
+                        jobId = result.job_id;
+                        progressInterval = setInterval(async () => {
+                            try {
+                                const progressResponse = await fetch(`/api/scraping-progress/?job_id=${jobId}`);
+                                if (progressResponse.ok) {
+                                    const progressData = await progressResponse.json();
+                                    
+                                    const progressMessage = document.getElementById('progress-message');
+                                    const progressBar = document.getElementById('progress-bar');
+                                    const progressStats = document.getElementById('progress-stats');
+                                    
+                                    if (progressMessage) {
+                                        progressMessage.textContent = progressData.message || 'Processing...';
+                                    }
+                                    
+                                    if (progressBar && progressData.total_pages) {
+                                        const percent = Math.min(100, (progressData.current_page / progressData.total_pages) * 100);
+                                        progressBar.style.width = percent + '%';
+                                    }
+                                    
+                                    if (progressStats) {
+                                        progressStats.textContent = `Page ${progressData.current_page}${progressData.total_pages ? ` of ${progressData.total_pages}` : ''} | Records: ${progressData.records_collected || 0}`;
+                                    }
+                                    
+                                    if (progressData.status === 'completed' || progressData.status === 'error') {
+                                        clearInterval(progressInterval);
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('Progress polling error:', err);
+                            }
+                        }, 2000);
+                    }
+
+                    if (!response.ok) {
+                        if (progressInterval) clearInterval(progressInterval);
+                        loading.classList.remove('active');
+                        progressDiv.remove();
+                        submitBtn.disabled = false;
+                        responseSection.style.display = 'block';
+                        statusBadge.textContent = `Error: ${response.status} ${response.statusText}`;
+                        statusBadge.className = 'status-badge status-error';
+                        responseContent.textContent = JSON.stringify(result || {error: 'Unknown error'}, null, 2);
+                        exportCsvBtn.style.display = 'none';
+                        exportJsonBtn.style.display = 'none';
+                        return;
+                    }
+                    
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    if (progressInterval) clearInterval(progressInterval);
+
+                    loading.classList.remove('active');
+                    progressDiv.remove();
+                    loadingText.textContent = 'Scraping data...';
+                    submitBtn.disabled = false;
+
+                    responseSection.style.display = 'block';
+                    
+                    if (result.success) {
+                        const duplicatesInfo = result.duplicates_removed > 0 ? ` (${result.duplicates_removed} duplicates removed)` : '';
+                        statusBadge.textContent = `Scraped ${result.total_records} records from ${result.pages_scraped} pages${duplicatesInfo}`;
+                        statusBadge.className = 'status-badge status-success';
+                        
+                        window.scrapedRecords = result.records;
+                        
+                        const displayData = {
+                            summary: {
+                                total_records: result.total_records,
+                                duplicates_removed: result.duplicates_removed || 0,
+                                pages_scraped: result.pages_scraped,
+                                sample_records: result.records.slice(0, 5),
+                                note: `Showing first 5 records. All ${result.total_records} records are available for export.`
+                            },
+                            all_records: result.records
+                        };
+                        
+                        responseContent.textContent = JSON.stringify(displayData, null, 2);
+                        exportCsvBtn.style.display = 'inline-block';
+                        exportJsonBtn.style.display = 'inline-block';
+                    } else {
+                        statusBadge.textContent = 'Error';
+                        statusBadge.className = 'status-badge status-error';
+                        responseContent.textContent = JSON.stringify(result, null, 2);
+                        exportCsvBtn.style.display = 'none';
+                        exportJsonBtn.style.display = 'none';
+                    }
+                } catch (error) {
+                    if (progressInterval) clearInterval(progressInterval);
+                    loading.classList.remove('active');
+                    const progressDiv = document.getElementById('progress-display');
+                    if (progressDiv) progressDiv.remove();
+                    submitBtn.disabled = false;
+                    
+                    responseSection.style.display = 'block';
+                    statusBadge.textContent = 'Error';
+                    statusBadge.className = 'status-badge status-error';
+                    
+                    let errorMsg = error.message;
+                    if (error.name === 'AbortError') {
+                        errorMsg = 'Request timed out after 10 minutes. Try scraping fewer pages or check your network connection.';
+                    } else if (!errorMsg) {
+                        errorMsg = 'Network error or server timeout. Please try again with fewer pages.';
+                    }
+                    
+                    responseContent.textContent = `Error: ${errorMsg}`;
+                    console.error('Scraping error:', error);
+                }
+                return;
+            }
+
+            // Single page scraping (original logic)
+            // Show loading
+            loading.classList.add('active');
+            responseSection.style.display = 'none';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/api/scrape/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        method: method,
+                        data: requestData,
+                        headers: headers,
+                        fields: fields.length > 0 ? fields : null
+                    })
+                });
+
+                const result = await response.json();
+
+                // Hide loading
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+
+                // Show response
+                responseSection.style.display = 'block';
+                
+                if (result.success) {
+                    statusBadge.textContent = `Status: ${result.status_code}`;
+                    statusBadge.className = 'status-badge status-success';
+                    responseContent.textContent = JSON.stringify(result.data, null, 2);
+                    currentRequestId = result.request_id;
+                    
+                    // Show export buttons if we have records
+                    if (result.data && result.data.data && result.data.data.records) {
+                        exportCsvBtn.style.display = 'inline-block';
+                        exportJsonBtn.style.display = 'inline-block';
+                    } else {
+                        exportCsvBtn.style.display = 'none';
+                        exportJsonBtn.style.display = 'none';
+                    }
+                    
+                    // Fetch and display available fields
+                    fetchAndDisplayAvailableFields(result.data, result.request_id);
+                } else {
+                    statusBadge.textContent = `Error: ${result.error || 'Unknown error'}`;
+                    statusBadge.className = 'status-badge status-error';
+                    responseContent.textContent = JSON.stringify(result, null, 2);
+                    exportCsvBtn.style.display = 'none';
+                    exportJsonBtn.style.display = 'none';
+                }
+            } catch (error) {
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+                
+                responseSection.style.display = 'block';
+                statusBadge.textContent = 'Error';
+                statusBadge.className = 'status-badge status-error';
+                responseContent.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Scrape all pages
+
+        // Export functions
+        exportCsvBtn.addEventListener('click', () => {
+            // Prioritize paginated records if available
+            if (window.scrapedRecords && window.scrapedRecords.length > 0) {
+                // Export from paginated scrape - all records
+                const csvContent = convertToCSV(window.scrapedRecords);
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `scraped_data_${window.scrapedRecords.length}_records.csv`;
+                link.click();
+            } else if (currentRequestId) {
+                // Fallback to database export for single page
+                window.open(`/api/export/?request_id=${currentRequestId}&format=csv`, '_blank');
+            } else {
+                alert('No data available to export. Please scrape data first.');
+            }
+        });
+
+        exportJsonBtn.addEventListener('click', () => {
+            // Prioritize paginated records if available
+            if (window.scrapedRecords && window.scrapedRecords.length > 0) {
+                // Export from paginated scrape - all records
+                const jsonContent = JSON.stringify(window.scrapedRecords, null, 2);
+                const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `scraped_data_${window.scrapedRecords.length}_records.json`;
+                link.click();
+            } else if (currentRequestId) {
+                // Fallback to database export for single page
+                window.open(`/api/export/?request_id=${currentRequestId}&format=json`, '_blank');
+            } else {
+                alert('No data available to export. Please scrape data first.');
+            }
+        });
+
+        function flattenDict(obj, parentKey = '', sep = '.') {
+            /**
+             * Flatten a nested object using dot notation.
+             * @param {Object} obj - Object to flatten
+             * @param {string} parentKey - Parent key prefix (used recursively)
+             * @param {string} sep - Separator for nested keys (default: '.')
+             * @returns {Object} Flattened object with dot-separated keys
+             */
+            const items = {};
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const newKey = parentKey ? `${parentKey}${sep}${key}` : key;
+                    const value = obj[key];
+                    
+                    if (value === null || value === undefined) {
+                        items[newKey] = '';
+                    } else if (Array.isArray(value)) {
+                        // For arrays, convert to JSON string
+                        if (value.length > 0 && typeof value[0] === 'object') {
+                            items[newKey] = JSON.stringify(value);
+                        } else {
+                            items[newKey] = JSON.stringify(value);
+                        }
+                    } else if (typeof value === 'object') {
+                        // Recursively flatten nested objects
+                        const flattened = flattenDict(value, newKey, sep);
+                        Object.assign(items, flattened);
+                    } else {
+                        items[newKey] = value;
+                    }
+                }
+            }
+            return items;
+        }
+
+        function convertToCSV(records) {
+            if (!records || records.length === 0) return '';
+            
+            // Flatten all records and collect all field names
+            const flattenedRecords = [];
+            const fieldnames = new Set();
+            
+            records.forEach(record => {
+                const flattened = flattenDict(record);
+                flattenedRecords.push(flattened);
+                Object.keys(flattened).forEach(key => fieldnames.add(key));
+            });
+            
+            const fields = Array.from(fieldnames).sort();
+            
+            // Create header row
+            const headerRow = fields.map(field => {
+                return '"' + String(field).replace(/"/g, '""') + '"';
+            }).join(',');
+            const rows = [headerRow];
+            
+            // Create data rows
+            flattenedRecords.forEach(flattenedRecord => {
+                const row = fields.map(field => {
+                    const value = flattenedRecord[field];
+                    if (value === null || value === undefined || value === '') {
+                        return '""';
+                    }
+                    // Escape quotes and wrap in quotes
+                    const stringValue = String(value).replace(/"/g, '""').replace(/\n/g, ' ').replace(/\r/g, '');
+                    return '"' + stringValue + '"';
+                });
+                rows.push(row.join(','));
+            });
+            
+            return rows.join('\n');
+        }
+
+        // Function to extract field paths from a JavaScript object
+        function extractFieldPathsFromObject(obj, parentKey = '', sep = '.') {
+            const paths = new Set();
+            if (obj === null || obj === undefined) {
+                return paths;
+            }
+            if (Array.isArray(obj)) {
+                // For arrays, extract from first item if it's an object
+                if (obj.length > 0 && typeof obj[0] === 'object' && obj[0] !== null) {
+                    extractFieldPathsFromObject(obj[0], parentKey, sep).forEach(p => paths.add(p));
+                }
+            } else if (typeof obj === 'object') {
+                for (const key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        const newKey = parentKey ? `${parentKey}${sep}${key}` : key;
+                        const value = obj[key];
+                        if (value === null || value === undefined) {
+                            paths.add(newKey);
+                        } else if (Array.isArray(value)) {
+                            paths.add(newKey);
+                            if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+                                extractFieldPathsFromObject(value[0], newKey, sep).forEach(p => paths.add(p));
+                            }
+                        } else if (typeof value === 'object') {
+                            extractFieldPathsFromObject(value, newKey, sep).forEach(p => paths.add(p));
+                        } else {
+                            paths.add(newKey);
+                        }
+                    }
+                }
+            }
+            return paths;
+        }
+
+        // Function to extract records from response data
+        function extractRecordsFromResponse(responseData) {
+            let records = [];
+            
+            if (!responseData) {
+                return records;
+            }
+            
+            // Handle paginated response structure (summary.all_records or summary.sample_records)
+            if (responseData.summary) {
+                if (Array.isArray(responseData.summary.all_records)) {
+                    records = responseData.summary.all_records;
+                } else if (Array.isArray(responseData.summary.sample_records)) {
+                    records = responseData.summary.sample_records;
+                }
+            }
+            // Handle Messe Frankfurt API structure (result.hits)
+            else if (responseData.result && responseData.result.hits && Array.isArray(responseData.result.hits)) {
+                records = responseData.result.hits.map(hit => {
+                    if (hit && typeof hit === 'object' && 'exhibitor' in hit) {
+                        return hit.exhibitor;
+                    }
+                    return hit;
+                });
+            }
+            // Handle nested data.result.hits (if response is wrapped)
+            else if (responseData.data && responseData.data.result && responseData.data.result.hits && Array.isArray(responseData.data.result.hits)) {
+                records = responseData.data.result.hits.map(hit => {
+                    if (hit && typeof hit === 'object' && 'exhibitor' in hit) {
+                        return hit.exhibitor;
+                    }
+                    return hit;
+                });
+            }
+            // Handle standard structure (data.records)
+            else if (responseData.data && responseData.data.records && Array.isArray(responseData.data.records)) {
+                records = responseData.data.records;
+            }
+            // Handle nested data.data.records
+            else if (responseData.data && responseData.data.data && responseData.data.data.records && Array.isArray(responseData.data.data.records)) {
+                records = responseData.data.data.records;
+            }
+            // Handle data as array
+            else if (Array.isArray(responseData.data)) {
+                records = responseData.data;
+            }
+            // Handle response as array
+            else if (Array.isArray(responseData)) {
+                records = responseData;
+            }
+            // Handle data as object with records
+            else if (responseData.data && typeof responseData.data === 'object' && 'records' in responseData.data) {
+                records = responseData.data.records;
+            }
+            
+            return records;
+        }
+
+        // Function to fetch and display available fields
+        async function fetchAndDisplayAvailableFields(responseData, requestId = null) {
+            console.log('fetchAndDisplayAvailableFields called', { responseData, requestId });
+            const availableFieldsSection = document.getElementById('availableFieldsSection');
+            const availableFieldsContainer = document.getElementById('availableFieldsContainer');
+            
+            if (!availableFieldsSection || !availableFieldsContainer) {
+                console.error('Available fields section elements not found');
+                return;
+            }
+            
+            try {
+                availableFieldsContainer.innerHTML = '<p style="color: #666; font-style: italic;">Loading available fields...</p>';
+                availableFieldsSection.style.display = 'block';
+                
+                // First, try to extract fields client-side as a fallback
+                let fields = [];
+                console.log('Extracting records from responseData:', responseData);
+                const records = extractRecordsFromResponse(responseData);
+                console.log('Extracted records:', records, 'Count:', records ? records.length : 0);
+                
+                if (records && records.length > 0) {
+                    const sampleRecord = records[0];
+                    console.log('Sample record:', sampleRecord);
+                    if (sampleRecord && typeof sampleRecord === 'object') {
+                        const fieldPaths = extractFieldPathsFromObject(sampleRecord);
+                        fields = Array.from(fieldPaths).sort();
+                        console.log('Extracted', fields.length, 'fields client-side:', fields.slice(0, 10));
+                    } else {
+                        console.warn('Sample record is not an object:', typeof sampleRecord, sampleRecord);
+                    }
+                } else {
+                    console.warn('No records extracted from responseData, trying to extract from entire response');
+                    // Fallback: try to extract fields from the entire response structure
+                    if (responseData && typeof responseData === 'object') {
+                        const fieldPaths = extractFieldPathsFromObject(responseData);
+                        fields = Array.from(fieldPaths).sort();
+                        console.log('Extracted', fields.length, 'fields from entire response:', fields.slice(0, 10));
+                    }
+                }
+                
+                // Try backend only if client-side extraction failed or if we have a request_id
+                // For large responses, we'll send only a sample to the backend
+                if (fields.length === 0 || requestId) {
+                    try {
+                        // If data is large, send only a sample for field extraction
+                        let dataToSend = responseData;
+                        if (records && records.length > 100) {
+                            // Create a sample response with just first 10 records for field extraction
+                            const sampleRecords = records.slice(0, 10);
+                            if (responseData.summary) {
+                                dataToSend = {
+                                    summary: {
+                                        sample_records: sampleRecords
+                                    }
+                                };
+                            } else if (responseData.result && responseData.result.hits) {
+                                dataToSend = {
+                                    result: {
+                                        hits: sampleRecords.map(record => ({ exhibitor: record }))
+                                    }
+                                };
+                            } else {
+                                dataToSend = {
+                                    data: {
+                                        records: sampleRecords
+                                    }
+                                };
+                            }
+                            console.log('Sending sample data to backend (', sampleRecords.length, 'records)');
+                        }
+                        
+                        const requestBody = {
+                            response_data: dataToSend,
+                            request_id: requestId
+                        };
+                        console.log('Sending request to /api/available-fields/');
+                        
+                        const response = await fetch('/api/available-fields/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(requestBody)
+                        });
+                        
+                        console.log('Response status:', response.status);
+                        const result = await response.json();
+                        console.log('Response data:', result);
+                        
+                        if (response.ok && result.success && result.fields && result.fields.length > 0) {
+                            fields = result.fields;
+                            console.log('Using', fields.length, 'fields from backend');
+                        } else {
+                            console.warn('Backend extraction failed, using client-side fields');
+                        }
+                    } catch (backendError) {
+                        console.warn('Backend call failed, using client-side extraction:', backendError);
+                    }
+                } else {
+                    console.log('Using client-side extracted fields, skipping backend call');
+                }
+                
+                if (fields.length > 0) {
+                    console.log('Displaying', fields.length, 'fields');
+                    displayAvailableFields(fields);
+                } else {
+                    console.warn('No fields found');
+                    availableFieldsContainer.innerHTML = '<p style="color: #999;">No fields found or unable to extract fields.</p>';
+                }
+            } catch (error) {
+                console.error('Error fetching available fields:', error);
+                availableFieldsContainer.innerHTML = `<p style="color: #ef4444;">Error loading fields: ${error.message}</p>`;
+            }
+        }
+
+        // Function to display available fields in a user-friendly way
+        function displayAvailableFields(fields) {
+            const container = document.getElementById('availableFieldsContainer');
+            container.innerHTML = '';
+            
+            // Group fields by top-level key for better organization
+            const groups = {};
+            fields.forEach(field => {
+                const topLevel = field.split('.')[0];
+                if (!groups[topLevel]) {
+                    groups[topLevel] = [];
+                }
+                groups[topLevel].push(field);
+            });
+            
+            // Display fields grouped by top-level key
+            Object.keys(groups).sort().forEach(groupKey => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'field-group';
+                
+                const groupTitle = document.createElement('div');
+                groupTitle.className = 'field-group-title';
+                groupTitle.textContent = groupKey;
+                groupDiv.appendChild(groupTitle);
+                
+                const fieldsGrid = document.createElement('div');
+                fieldsGrid.className = 'fields-grid';
+                
+                groups[groupKey].sort().forEach(field => {
+                    const checkboxDiv = document.createElement('div');
+                    checkboxDiv.className = 'field-checkbox';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `field_${field.replace(/\./g, '_')}`;
+                    checkbox.value = field;
+                    checkbox.dataset.field = field;
+                    
+                    const label = document.createElement('label');
+                    label.htmlFor = checkbox.id;
+                    label.textContent = field;
+                    
+                    checkboxDiv.appendChild(checkbox);
+                    checkboxDiv.appendChild(label);
+                    fieldsGrid.appendChild(checkboxDiv);
+                });
+                
+                groupDiv.appendChild(fieldsGrid);
+                container.appendChild(groupDiv);
+            });
+        }
+
+        // Function to get selected fields
+        function getSelectedFields() {
+            const checkboxes = document.querySelectorAll('#availableFieldsContainer input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
+
+        // Function to apply selected fields to textarea
+        function applySelectedFields() {
+            const selectedFields = getSelectedFields();
+            if (selectedFields.length > 0) {
+                document.getElementById('fields').value = selectedFields.join(', ');
+            } else {
+                document.getElementById('fields').value = '';
+            }
+        }
+
+        // Event listeners for field selection buttons
+        document.getElementById('selectAllFieldsBtn').addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('#availableFieldsContainer input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        });
+
+        document.getElementById('deselectAllFieldsBtn').addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('#availableFieldsContainer input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        });
+
+        document.getElementById('applySelectedFieldsBtn').addEventListener('click', () => {
+            applySelectedFields();
+            // Scroll to fields textarea
+            document.getElementById('fields').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        // Set active menu item based on current URL
+        (function() {
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('.nav-menu-link');
+            menuLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === currentPath || 
+                    (currentPath === '/' && link.getAttribute('href') === '/') ||
+                    (currentPath === '' && link.getAttribute('href') === '/')) {
+                    link.classList.add('active');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
+
