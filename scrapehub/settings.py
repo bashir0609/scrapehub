@@ -3,7 +3,6 @@ Django settings for scrapehub project.
 """
 
 import os
-import dj_database_url
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -79,6 +78,7 @@ WSGI_APPLICATION = 'scrapehub.wsgi.application'
 # Use environment variable for database URL if available (likely Render), otherwise standard config
 database_url = os.environ.get('DATABASE_URL')
 if database_url:
+    import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
             default=database_url,
