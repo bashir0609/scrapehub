@@ -279,8 +279,7 @@
 
         <!-- Live Statistics Panel -->
         <div class="card" id="liveStatsCard">
-            <h2>{% if job.status == 'running' or job.status == 'paused' or job.status == 'auto_paused' %}Live {% endif
-                %}Statistics</h2>
+            <h2>{% if job.status != 'completed' and job.status != 'failed' %}Live {% endif %}Statistics</h2>
 
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
@@ -516,7 +515,6 @@
                 }
             }
         </script>
-        {% endif %}
 
         {% if events %}
         <div class="card">
