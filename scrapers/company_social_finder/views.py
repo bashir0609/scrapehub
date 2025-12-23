@@ -984,7 +984,12 @@ def web_scrape(request):
                             if tel_elem:
                                 found_value = tel_elem.get_text(strip=True) or tel_elem.get('content', '')
                                 if found_value:
-                                    found_value = re.sub(r'[^\d+\-() ]', '', found_value).strip()
+                                    found_value = re.sub(r'[^\d+\-() ]', '', found_value)
+                                    found_value = re.sub(r'\s+', ' ', found_value).strip()
+                                    # Take only first phone if multiple found
+                                    parts = re.split(r'[,\n\r;]', found_value)
+                                    if parts:
+                                        found_value = parts[0].strip()
                                     if settings.DEBUG:
                                         print(f"Auto-extracted {field_name} from itemprop: {found_value}")
                             
@@ -1007,7 +1012,13 @@ def web_scrape(request):
                                             cleaned = re.sub(r'[^\d]', '', match)
                                             # Phone should have 10-15 digits
                                             if 10 <= len(cleaned) <= 15:
-                                                found_value = match.strip()
+                                                # Preserve original format, just clean unwanted chars
+                                                found_value = re.sub(r'[^\d+\-() ]', '', match)
+                                                found_value = re.sub(r'\s+', ' ', found_value).strip()
+                                                # Take only first phone if multiple found
+                                                parts = re.split(r'[,\n\r;]', found_value)
+                                                if parts:
+                                                    found_value = parts[0].strip()
                                                 if settings.DEBUG:
                                                     print(f"Auto-extracted {field_name} using regex: {found_value}")
                                                 break
@@ -1231,7 +1242,13 @@ def web_scrape(request):
                                             for match in phone_matches:
                                                 cleaned = re.sub(r'[^\d]', '', match)
                                                 if 10 <= len(cleaned) <= 15:
-                                                    found_value = match.strip()
+                                                    # Preserve original format, just clean unwanted chars
+                                                    found_value = re.sub(r'[^\d+\-() ]', '', match)
+                                                    found_value = re.sub(r'\s+', ' ', found_value).strip()
+                                                    # Take only first phone if multiple found
+                                                    parts = re.split(r'[,\n\r;]', found_value)
+                                                    if parts:
+                                                        found_value = parts[0].strip()
                                                     if settings.DEBUG:
                                                         print(f"Found {field_name} using regex: {found_value}")
                                                     break
@@ -1265,9 +1282,14 @@ def web_scrape(request):
                                     value = href.replace('tel:', '').strip()
                                 else:
                                     value = get_element_text(elem)
-                                # Clean phone number
+                                # Clean phone number but preserve formatting
                                 if value:
-                                    value = re.sub(r'[^\d+\-() ]', '', value).strip()
+                                    value = re.sub(r'[^\d+\-() ]', '', value)
+                                    value = re.sub(r'\s+', ' ', value).strip()
+                                    # Take only first phone if multiple found
+                                    parts = re.split(r'[,\n\r;]', value)
+                                    if parts:
+                                        value = parts[0].strip()
                             
                             # Special handling for URLs (homepage, contact, social media)
                             elif 'url' in field_name.lower() or 'social' in field_name.lower():
@@ -1332,9 +1354,14 @@ def web_scrape(request):
                                         value = href.replace('tel:', '').strip()
                                     else:
                                         value = elem.get_text(strip=True)
-                                    # Clean phone number
+                                    # Clean phone number but preserve formatting
                                     if value:
-                                        value = re.sub(r'[^\d+\-() ]', '', value).strip()
+                                        value = re.sub(r'[^\d+\-() ]', '', value)
+                                        value = re.sub(r'\s+', ' ', value).strip()
+                                        # Take only first phone if multiple found
+                                        parts = re.split(r'[,\n\r;]', value)
+                                        if parts:
+                                            value = parts[0].strip()
                                 
                                 # Special handling for URLs
                                 elif 'url' in field_name.lower() or 'social' in field_name.lower():
@@ -1849,6 +1876,12 @@ def process_bulk_urls(request_id, normalized_urls, selectors, method, headers, u
         print(f"[Bulk Scrape Thread] About to start loop with {len(normalized_urls)} URLs", flush=True)
         
         for idx, url in enumerate(normalized_urls):
+            # Initialize variables at the start of each iteration
+            html_content = None
+            response_text = None
+            response_status = None
+            response = None  # Initialize response variable BEFORE try block
+            
             try:
                 # Update progress BEFORE processing
                 request_id_str = str(request_id)
@@ -1870,9 +1903,6 @@ def process_bulk_urls(request_id, normalized_urls, selectors, method, headers, u
                 
                 # Check if JavaScript rendering is needed
                 use_js_rendering = method in ['selenium', 'playwright']
-                html_content = None
-                response_text = None
-                response_status = None
                 
                 if use_js_rendering:
                     # Use Selenium or Playwright for JavaScript rendering
@@ -1905,11 +1935,29 @@ def process_bulk_urls(request_id, normalized_urls, selectors, method, headers, u
                                     response_status = 200
                                 finally:
                                     driver.quit()
-                            except ImportError:
+                            except ImportError as import_err:
+                                error_msg = f'Selenium not installed. Install with: pip install selenium. Error: {str(import_err)}'
+                                if settings.DEBUG:
+                                    print(f"[Bulk Scrape] Selenium ImportError: {import_err}", flush=True)
                                 all_results.append({
                                     'url': url,
                                     'success': False,
-                                    'error': 'Selenium not installed. Install with: pip install selenium',
+                                    'error': error_msg,
+                                    'status_code': None
+                                })
+                                failed += 1
+                                if delay_between_urls > 0 and idx < len(normalized_urls) - 1:
+                                    time.sleep(delay_between_urls)
+                                continue
+                            except Exception as selenium_err:
+                                # Handle other Selenium errors (like ChromeDriver not found)
+                                error_msg = f'Selenium error: {str(selenium_err)}'
+                                if settings.DEBUG:
+                                    print(f"[Bulk Scrape] Selenium error for {url}: {selenium_err}", flush=True)
+                                all_results.append({
+                                    'url': url,
+                                    'success': False,
+                                    'error': error_msg,
                                     'status_code': None
                                 })
                                 failed += 1
@@ -2046,7 +2094,16 @@ def process_bulk_urls(request_id, normalized_urls, selectors, method, headers, u
                                     else:
                                         found_value = elem.get_text(strip=True)
                                     if found_value:
-                                        found_value = re.sub(r'[^\d+\-() ]', '', found_value).strip()
+                                        # Clean phone number but preserve spaces and formatting
+                                        # Remove only unwanted characters, keep digits, +, -, (), spaces
+                                        found_value = re.sub(r'[^\d+\-() ]', '', found_value)
+                                        # Normalize multiple spaces to single space
+                                        found_value = re.sub(r'\s+', ' ', found_value).strip()
+                                        # Take only the first phone number if multiple are found
+                                        # Split by common separators and take first valid one
+                                        parts = re.split(r'[,\n\r;]', found_value)
+                                        if parts:
+                                            found_value = parts[0].strip()
                                 elif 'url' in field_name.lower():
                                     href = elem.get('href', '')
                                     if href:
@@ -2070,11 +2127,21 @@ def process_bulk_urls(request_id, normalized_urls, selectors, method, headers, u
                                     elif 'phone' in field_name.lower():
                                         href = elem.get('href', '')
                                         if href.startswith('tel:'):
-                                            values.append(href.replace('tel:', '').strip())
+                                            phone_val = href.replace('tel:', '').strip()
+                                            # Clean but preserve formatting
+                                            phone_val = re.sub(r'[^\d+\-() ]', '', phone_val)
+                                            phone_val = re.sub(r'\s+', ' ', phone_val).strip()
+                                            values.append(phone_val)
                                         else:
                                             val = elem.get_text(strip=True)
                                             if val:
-                                                values.append(re.sub(r'[^\d+\-() ]', '', val).strip())
+                                                # Clean but preserve formatting
+                                                phone_val = re.sub(r'[^\d+\-() ]', '', val)
+                                                phone_val = re.sub(r'\s+', ' ', phone_val).strip()
+                                                # Take only first phone if multiple
+                                                parts = re.split(r'[,\n\r;]', phone_val)
+                                                if parts:
+                                                    values.append(parts[0].strip())
                                     elif 'url' in field_name.lower():
                                         href = elem.get('href', '')
                                         if href:
@@ -2105,7 +2172,12 @@ def process_bulk_urls(request_id, normalized_urls, selectors, method, headers, u
                                     if tel_elem:
                                         found_value = tel_elem.get_text(strip=True) or tel_elem.get('content', '')
                                         if found_value:
-                                            found_value = re.sub(r'[^\d+\-() ]', '', found_value).strip()
+                                            found_value = re.sub(r'[^\d+\-() ]', '', found_value)
+                                            found_value = re.sub(r'\s+', ' ', found_value).strip()
+                                            # Take only first phone if multiple found
+                                            parts = re.split(r'[,\n\r;]', found_value)
+                                            if parts:
+                                                found_value = parts[0].strip()
                             elif 'company name' in field_name.lower() or 'company' in field_name.lower():
                                 title_tag = soup.find('title')
                                 if title_tag:
@@ -2225,15 +2297,15 @@ def process_bulk_urls(request_id, normalized_urls, selectors, method, headers, u
                         'url': url,
                         'success': True,
                         'data': extracted_data,
-                        'status_code': response.status_code
+                        'status_code': response_status
                     })
                     completed += 1
                 else:
                     all_results.append({
                         'url': url,
                         'success': False,
-                        'error': f'HTTP {response.status_code}',
-                        'status_code': response.status_code
+                        'error': f'HTTP {response_status}' if response_status else 'Unknown error',
+                        'status_code': response_status
                     })
                     failed += 1
                 

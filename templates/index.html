@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ScrapeHub - Multi-Platform Data Scraper</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
     <style>
         * {
             margin: 0;
@@ -128,7 +130,9 @@
             color: #333;
         }
 
-        input, select, textarea {
+        input,
+        select,
+        textarea {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -137,7 +141,9 @@
             transition: border-color 0.3s;
         }
 
-        input:focus, select:focus, textarea:focus {
+        input:focus,
+        select:focus,
+        textarea:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -242,8 +248,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .example-btn {
@@ -325,17 +336,18 @@
             padding: 10px;
             border-radius: 6px;
         }
+
         @media (max-width: 768px) {
             .nav-container {
                 flex-direction: column;
                 gap: 15px;
             }
-            
+
             .nav-menu {
                 flex-wrap: wrap;
                 justify-content: center;
             }
-            
+
             .nav-menu-link {
                 padding: 8px 15px;
                 font-size: 0.9em;
@@ -343,6 +355,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation Header -->
     <nav class="nav-header">
@@ -365,7 +378,10 @@
                     <a href="/ecommerce-scraper/" class="nav-menu-link">E-commerce Scraper</a>
                 </li>
                 <li class="nav-menu-item">
-                    <a href="/rapidapi-scraper/" class="nav-menu-link">RapidAPI Scraper</a>
+                    <a href="/jobs/" class="nav-menu-link">Jobs</a>
+                </li>
+                <li class="nav-menu-item">
+                    <a href="/others/" class="nav-menu-link">Others</a>
                 </li>
             </ul>
         </div>
@@ -380,7 +396,8 @@
         </div>
 
         <!-- Import from Browser Network Tab -->
-        <div class="card" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9;">
+        <div class="card"
+            style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #0ea5e9;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 style="margin: 0; color: #0369a1;">🚀 Quick Import from Browser</h3>
                 <button type="button" class="example-btn" id="toggleImportBtn" onclick="toggleImportSection()">
@@ -390,29 +407,32 @@
             <div id="importSection" style="display: none;">
                 <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">
-                        <strong>How to use:</strong> Open F12 → Network tab → Find your API request → Right-click → Copy → Copy as cURL (or manually copy Headers and Payload)
+                        <strong>How to use:</strong> Open F12 → Network tab → Find your API request → Right-click → Copy
+                        → Copy as cURL (or manually copy Headers and Payload)
                     </p>
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label for="importHeaders">Headers (from F12 → Network → Headers tab)</label>
-                        <textarea id="importHeaders" name="importHeaders" 
-                                  placeholder='Paste from Network tab Headers section. Include:&#10;&#10;1. General section (contains URL and Method):&#10;Request URL: https://example.com/api/endpoint&#10;Request Method: POST&#10;&#10;2. Request Headers section:&#10;Content-Type: application/json&#10;Authorization: Bearer token123&#10;&#10;You can paste the entire Headers tab content, or just the General + Request Headers sections.&#10;&#10;Also supports:&#10;- cURL format&#10;- Raw HTTP headers&#10;- Key-value pairs' 
-                                  style="min-height: 150px;"></textarea>
+                        <textarea id="importHeaders" name="importHeaders"
+                            placeholder='Paste from Network tab Headers section. Include:&#10;&#10;1. General section (contains URL and Method):&#10;Request URL: https://example.com/api/endpoint&#10;Request Method: POST&#10;&#10;2. Request Headers section:&#10;Content-Type: application/json&#10;Authorization: Bearer token123&#10;&#10;You can paste the entire Headers tab content, or just the General + Request Headers sections.&#10;&#10;Also supports:&#10;- cURL format&#10;- Raw HTTP headers&#10;- Key-value pairs'
+                            style="min-height: 150px;"></textarea>
                     </div>
                     <div class="form-group" style="margin-bottom: 15px;">
                         <label for="importPayload">Request Payload/Body (from F12 → Network → Payload tab)</label>
-                        <textarea id="importPayload" name="importPayload" 
-                                  placeholder='Paste request payload/body here (JSON, form data, etc.)&#10;Example:&#10;{"current": 1, "size": 10, "keyword": ""}' 
-                                  style="min-height: 120px;"></textarea>
+                        <textarea id="importPayload" name="importPayload"
+                            placeholder='Paste request payload/body here (JSON, form data, etc.)&#10;Example:&#10;{"current": 1, "size": 10, "keyword": ""}'
+                            style="min-height: 120px;"></textarea>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <button type="button" class="btn" onclick="parseAndImportFromBrowser()" style="flex: 1; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
+                        <button type="button" class="btn" onclick="parseAndImportFromBrowser()"
+                            style="flex: 1; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);">
                             ✨ Parse & Auto-Fill Form
                         </button>
                         <button type="button" class="example-btn" onclick="clearImportFields()">
                             Clear
                         </button>
                     </div>
-                    <div id="importStatus" style="margin-top: 10px; padding: 10px; border-radius: 6px; display: none;"></div>
+                    <div id="importStatus" style="margin-top: 10px; padding: 10px; border-radius: 6px; display: none;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -421,8 +441,7 @@
             <form id="scrapeForm">
                 <div class="form-group">
                     <label for="url">API URL *</label>
-                    <input type="url" id="url" name="url" required 
-                           placeholder="https://example.com/api/endpoint">
+                    <input type="url" id="url" name="url" required placeholder="https://example.com/api/endpoint">
                 </div>
 
                 <div class="row">
@@ -436,20 +455,20 @@
                         </select>
                     </div>
 
-                <div class="form-group">
-                    <label for="headers">Headers (JSON, optional)</label>
-                    <textarea id="headers" name="headers" 
-                              placeholder='{"Content-Type": "application/json", "Authorization": "Basic ..."}'></textarea>
-                    <button type="button" class="example-btn" onclick="loadExampleHeaders()">
-                        Load Example Headers
-                    </button>
-                </div>
+                    <div class="form-group">
+                        <label for="headers">Headers (JSON, optional)</label>
+                        <textarea id="headers" name="headers"
+                            placeholder='{"Content-Type": "application/json", "Authorization": "Basic ..."}'></textarea>
+                        <button type="button" class="example-btn" onclick="loadExampleHeaders()">
+                            Load Example Headers
+                        </button>
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label for="data">Request Data (JSON) *</label>
-                    <textarea id="data" name="data" required 
-                              placeholder='{"current": 1, "size": 10, "mainProductList": [], "keyword": ""}'></textarea>
+                    <textarea id="data" name="data" required
+                        placeholder='{"current": 1, "size": 10, "mainProductList": [], "keyword": ""}'></textarea>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <button type="button" class="example-btn" onclick="loadExample()">
                             Load Example Data
@@ -462,21 +481,26 @@
 
                 <div class="form-group">
                     <label for="fields">Fields to Keep (Optional)</label>
-                    <textarea id="fields" name="fields" 
-                              placeholder='Enter field names separated by commas or newlines. Use dot notation for nested fields.&#10;Examples:&#10;name, email, phone&#10;exhibitor.name, exhibitor.address.city, exhibitor.id'></textarea>
+                    <textarea id="fields" name="fields"
+                        placeholder='Enter field names separated by commas or newlines. Use dot notation for nested fields.&#10;Examples:&#10;name, email, phone&#10;exhibitor.name, exhibitor.address.city, exhibitor.id'></textarea>
                     <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
                         Leave empty to keep all fields. Use dot notation for nested fields (e.g., "exhibitor.name").
                         <br>After scraping, you can view and select available fields below.
                     </small>
                 </div>
 
-                <div id="availableFieldsSection" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div id="availableFieldsSection"
+                    style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #e0e0e0;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h4 style="margin: 0;">Available Fields</h4>
                         <div style="display: flex; gap: 10px;">
-                            <button type="button" class="example-btn" id="selectAllFieldsBtn" style="margin: 0;">Select All</button>
-                            <button type="button" class="example-btn" id="deselectAllFieldsBtn" style="margin: 0;">Deselect All</button>
-                            <button type="button" class="example-btn" id="applySelectedFieldsBtn" style="margin: 0; background: #667eea; color: white;">Apply Selected</button>
+                            <button type="button" class="example-btn" id="selectAllFieldsBtn" style="margin: 0;">Select
+                                All</button>
+                            <button type="button" class="example-btn" id="deselectAllFieldsBtn"
+                                style="margin: 0;">Deselect All</button>
+                            <button type="button" class="example-btn" id="applySelectedFieldsBtn"
+                                style="margin: 0; background: #667eea; color: white;">Apply Selected</button>
                         </div>
                     </div>
                     <div id="availableFieldsContainer" style="max-height: 400px; overflow-y: auto;">
@@ -581,7 +605,7 @@
             let headersText = document.getElementById('importHeaders').value.trim();
             let payloadText = document.getElementById('importPayload').value.trim();
             const statusDiv = document.getElementById('importStatus');
-            
+
             statusDiv.style.display = 'block';
             statusDiv.style.background = '#f0f9ff';
             statusDiv.style.color = '#0369a1';
@@ -591,7 +615,7 @@
                 // Smart detection: if headers field is empty but payload has content that looks like headers
                 if (!headersText && payloadText) {
                     // Check if payload contains header-like content
-                    if (payloadText.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/i) || 
+                    if (payloadText.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/i) ||
                         payloadText.match(/^[A-Za-z-]+:\s*.+$/m) ||
                         payloadText.includes('curl ')) {
                         // Swap them - payload field actually contains headers
@@ -626,7 +650,7 @@
                     extractedData.url = headerData.url || extractedData.url;
                     extractedData.method = headerData.method || extractedData.method;
                     extractedData.headers = headerData.headers || {};
-                    
+
                     // For GET requests, extract query parameters from URL and move to payload
                     if (extractedData.method === 'GET' && extractedData.url) {
                         try {
@@ -635,7 +659,7 @@
                             if (urlParts.length > 1) {
                                 const queryString = urlParts.slice(1).join('?'); // In case there are multiple ? (unlikely but safe)
                                 const queryParams = {};
-                                
+
                                 // Parse query string using URLSearchParams
                                 if (typeof URLSearchParams !== 'undefined') {
                                     const params = new URLSearchParams(queryString);
@@ -651,10 +675,10 @@
                                         }
                                     });
                                 }
-                                
+
                                 // Remove query string from URL
                                 extractedData.url = urlParts[0];
-                                
+
                                 // Replace payload with query params (for GET requests, query params are the payload)
                                 if (Object.keys(queryParams).length > 0) {
                                     extractedData.payload = queryParams;
@@ -683,7 +707,7 @@
                         document.getElementById('url').value = extractedData.url;
                     }
                 }
-                
+
                 if (extractedData.method) {
                     document.getElementById('method').value = extractedData.method;
                 }
@@ -692,7 +716,7 @@
                 if (Object.keys(extractedData.headers).length > 0) {
                     document.getElementById('headers').value = JSON.stringify(extractedData.headers, null, 2);
                 }
-                
+
                 // Populate payload
                 if (Object.keys(extractedData.payload).length > 0) {
                     document.getElementById('data').value = JSON.stringify(extractedData.payload, null, 2);
@@ -815,20 +839,20 @@
             if (responseHeadersMatch) {
                 sections.responseHeaders = responseHeadersMatch[1].trim();
             }
-            
+
             // If no explicit sections found, try to detect Request vs Response headers by content
             if (!sections.general && !sections.requestHeaders && !sections.responseHeaders) {
                 // Look for Request URL and Method at the start
                 const urlMatch = headersText.match(/(?:Request\s+)?URL[:\s]*(https?:\/\/[^\s\n\r"']+)/i);
                 const methodMatch = headersText.match(/(?:Request\s+)?Method[:\s]*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i);
-                
+
                 if (urlMatch) {
                     result.url = urlMatch[1].trim();
                 }
                 if (methodMatch) {
                     result.method = methodMatch[1].toUpperCase();
                 }
-                
+
                 // Split text into lines and identify Request Headers section
                 // Response headers typically come after Status Code and include: access-control-*, cache-control, content-*, date, server, etc.
                 // Request headers typically include: accept, accept-*, apikey, authorization, user-agent, origin, referer, host, etc.
@@ -836,7 +860,7 @@
                 let inRequestHeaders = false;
                 let requestHeadersStart = -1;
                 let responseHeadersStart = -1;
-                
+
                 // Common Response Header patterns
                 const responseHeaderPatterns = [
                     /^access-control-/, /^cache-control/, /^content-/, /^date$/i, /^server$/i,
@@ -844,28 +868,28 @@
                     /^x-frame-options/, /^x-request-id/, /^feature-policy/, /^p3p$/i,
                     /^referrer-policy/, /^content-security-policy/
                 ];
-                
+
                 // Common Request Header patterns
                 const requestHeaderPatterns = [
                     /^accept$/i, /^accept-/, /^apikey$/i, /^api-key$/i, /^authorization$/i,
                     /^user-agent$/i, /^origin$/i, /^referer$/i, /^host$/i, /^connection$/i,
                     /^sec-ch-ua/, /^sec-fetch-/, /^cookie$/i, /^content-type$/i, /^content-length$/i
                 ];
-                
+
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
-                    
+
                     // Skip metadata lines
                     if (line.match(/^(Request URL|Request Method|Status Code|Remote Address|Referrer Policy)/i)) {
                         continue;
                     }
-                    
+
                     // Check if this looks like a header line
                     const headerMatch = line.match(/^([^:]+):\s*(.+)$/);
                     if (headerMatch) {
                         const key = headerMatch[1].trim().toLowerCase();
-                        
+
                         // If we hit a response header and haven't found request headers yet, mark response section
                         if (responseHeaderPatterns.some(pattern => pattern.test(key))) {
                             if (responseHeadersStart === -1) {
@@ -876,7 +900,7 @@
                                 break;
                             }
                         }
-                        
+
                         // If we hit a request header pattern
                         if (requestHeaderPatterns.some(pattern => pattern.test(key))) {
                             if (requestHeadersStart === -1 && responseHeadersStart === -1) {
@@ -891,7 +915,7 @@
                         }
                     }
                 }
-                
+
                 // Extract Request Headers section
                 if (requestHeadersStart !== -1) {
                     // Find where request headers end (either at response headers or end of text)
@@ -920,7 +944,7 @@
                         /URL:?\s*(https?:\/\/[^\s\n\r"']+)/i,
                         /(https?:\/\/[^\s\n\r"']+)/i
                     ];
-                    
+
                     for (const pattern of urlPatterns) {
                         const match = sections.general.match(pattern);
                         if (match) {
@@ -935,14 +959,14 @@
                         }
                     }
                 }
-                
+
                 // Extract Method from General section (if not already extracted)
                 if (sections.general && !result.method) {
                     const methodPatterns = [
                         /(?:Request\s+)?Method:?\s*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i,
                         /Method:?\s*([A-Z]+)/i
                     ];
-                    
+
                     for (const pattern of methodPatterns) {
                         const match = sections.general.match(pattern);
                         if (match) {
@@ -951,7 +975,7 @@
                         }
                     }
                 }
-                
+
                 // If URL/method not found in general section, try to extract from full text
                 if (!result.url) {
                     const urlMatch = headersText.match(/(?:Request\s+)?URL[:\s]*(https?:\/\/[^\s\n\r"']+)/i);
@@ -988,7 +1012,7 @@
                     /URL\s*=\s*(https?:\/\/[^\s\n\r"']+)/i,
                     /(?:GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+(https?:\/\/[^\s\n\r"']+)/i
                 ];
-                
+
                 for (const pattern of urlPatterns) {
                     const match = headersText.match(pattern);
                     if (match) {
@@ -1008,7 +1032,7 @@
                     /Method\s*=\s*(GET|POST|PUT|DELETE|PATCH|OPTIONS)/i,
                     /^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/im
                 ];
-                
+
                 for (const pattern of methodPatterns) {
                     const match = headersText.match(pattern);
                     if (match) {
@@ -1024,7 +1048,7 @@
             // If sections were not found, try to parse raw HTTP request format
             if (!sections.general && !sections.requestHeaders) {
                 const lines = headersText.split('\n').map(l => l.trim()).filter(l => l);
-                
+
                 // Check for HTTP request line (GET /path HTTP/1.1 or POST /path HTTP/1.1)
                 const firstLine = lines[0];
                 const httpRequestMatch = firstLine.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+(.+?)(?:\s+HTTP\/[\d.]+)?$/i);
@@ -1033,7 +1057,7 @@
                         result.method = httpRequestMatch[1].toUpperCase();
                     }
                     const path = httpRequestMatch[2].trim();
-                    
+
                     // If we don't have a URL yet, try to construct it
                     if (!result.url) {
                         // Try to extract full URL from subsequent Host header
@@ -1064,7 +1088,7 @@
                     /(?:GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+(https?:\/\/[^\s\n\r"']+)/i,
                     /https?:\/\/[^\s\n\r"']+/i
                 ];
-                
+
                 for (const pattern of urlPatterns) {
                     const match = headersText.match(pattern);
                     if (match) {
@@ -1074,7 +1098,7 @@
                         if (result.url) break;
                     }
                 }
-                
+
                 // Last resort: try to find any URL-like pattern
                 if (!result.url) {
                     const anyUrlMatch = headersText.match(/(https?:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}[^\s\n\r"']*)/i);
@@ -1083,7 +1107,7 @@
                     }
                 }
             }
-            
+
             // If we have a method but no URL, try to extract from method line
             if (result.method && !result.url) {
                 const methodLineMatch = headersText.match(new RegExp(`^${result.method}\\s+(https?://[^\\s\\n]+)`, 'im'));
@@ -1097,16 +1121,16 @@
             const cleanedHeaders = {};
             for (const [key, value] of Object.entries(result.headers)) {
                 const keyLower = key.toLowerCase();
-                
+
                 // Skip invalid headers
-                if (keyLower === 'https' || keyLower === 'http' || 
-                    keyLower.length < 4 || 
+                if (keyLower === 'https' || keyLower === 'http' ||
+                    keyLower.length < 4 ||
                     /^\d+\.\d+\.\d+\.\d+/.test(key) ||
                     keyLower.includes('://') ||
                     (typeof value === 'string' && value.includes('://') && keyLower.length < 4)) {
                     continue;
                 }
-                
+
                 if (!headersToSkip.includes(keyLower)) {
                     cleanedHeaders[key] = value;
                 }
@@ -1124,13 +1148,13 @@
 
             // List of non-header fields to skip (from browser network tab)
             const nonHeaderFields = [
-                'request url', 'request method', 'status code', 'remote address', 
+                'request url', 'request method', 'status code', 'remote address',
                 'referrer policy', 'scheme', 'initiator', 'priority', 'request id',
                 'timestamp', 'wall time', 'request headers', 'response headers',
                 'general', 'query string parameters', 'form data', 'payload',
                 'provisional headers', 'view source', 'view parsed'
             ];
-            
+
             // Response headers to skip (these should not be sent in requests)
             const responseHeaderPatterns = [
                 /^access-control-/, /^cache-control$/i, /^content-encoding$/i, /^content-length$/i,
@@ -1152,12 +1176,12 @@
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
-                
+
                 // Skip HTTP request line
                 if (line.match(/^(GET|POST|PUT|DELETE|PATCH|OPTIONS)\s+/i)) {
                     continue;
                 }
-                
+
                 // Skip empty lines
                 if (!line) continue;
 
@@ -1165,7 +1189,7 @@
                 if (line.match(/^https?:\/\//i)) {
                     continue;
                 }
-                
+
                 // Skip lines that start with "https:" or "http:" (malformed header lines)
                 if (line.match(/^(https?):\s*/i)) {
                     continue;
@@ -1174,7 +1198,7 @@
                 // Try to match "Header-Name: value" format
                 // Also handle format where header name and value are on separate lines (browser network tab format)
                 let headerMatch = line.match(/^([^:]+):\s*(.+)$/);
-                
+
                 // If no colon match, check if this line looks like a header name (next line might be the value)
                 if (!headerMatch && i < lines.length - 1) {
                     const nextLine = lines[i + 1];
@@ -1184,63 +1208,63 @@
                         i++; // Skip next line since we consumed it
                     }
                 }
-                
+
                 if (headerMatch) {
                     const key = headerMatch[1].trim();
                     const value = headerMatch[2].trim();
-                    
+
                     // Skip if key is empty or value is empty
                     if (!key || !value) {
                         continue;
                     }
-                    
+
                     const keyLower = key.toLowerCase();
-                    
+
                     // Skip non-header fields
                     if (nonHeaderFields.some(field => keyLower.includes(field))) {
                         continue;
                     }
-                    
+
                     // Skip response headers (these should not be sent in requests)
                     if (responseHeaderPatterns.some(pattern => pattern.test(keyLower))) {
                         console.log('Skipping response header:', key);
                         continue;
                     }
-                    
+
                     // Skip lines that look like IP addresses or ports in key
                     if (/^\d+\.\d+\.\d+\.\d+/.test(key) || /^\d+$/.test(key)) {
                         continue;
                     }
-                    
+
                     // Skip if key looks like a URL or path
                     if (keyLower.includes('://') || keyLower.startsWith('/') || keyLower.includes('.com') || keyLower.includes('.org')) {
                         continue;
                     }
-                    
+
                     // Skip if value looks like a URL and key is suspicious
                     if (value.includes('://') && (keyLower === 'https' || keyLower === 'http' || keyLower.length < 3)) {
                         continue;
                     }
-                    
+
                     // Skip single-word keys that are too short or suspicious (like "https", "http", IP addresses)
                     if (keyLower.length < 4 && !['host', 'user-agent', 'x-id', 'x-key'].some(h => keyLower.includes(h))) {
                         continue;
                     }
-                    
+
                     // Skip if key is just "https" or "http"
                     if (keyLower === 'https' || keyLower === 'http') {
                         continue;
                     }
-                    
+
                     // Only accept valid HTTP headers
                     // Check if it's a known header name, or follows HTTP header naming conventions
                     // Be more lenient - accept any header that looks like a valid HTTP header name
-                    const isValidHeader = 
+                    const isValidHeader =
                         validHeaderNames.some(name => keyLower === name || keyLower.startsWith(name + '-')) ||
                         (key.match(/^[a-z][a-z0-9-]*$/i) && key.length >= 2) || // Standard header format: at least 2 chars, starts with letter, contains only letters/numbers/hyphens
                         keyLower.startsWith('x-') || // Custom headers (x-*)
                         keyLower === 'apikey' || keyLower === 'api-key' || keyLower === 'api_key';
-                    
+
                     if (isValidHeader) {
                         headers[key] = value;
                         console.log('✓ Added header:', key, '=', value.substring(0, 50));
@@ -1259,24 +1283,24 @@
                         const filtered = {};
                         for (const [key, value] of Object.entries(parsed)) {
                             const keyLower = key.toLowerCase();
-                            
+
                             // Skip invalid keys
                             if (keyLower === 'https' || keyLower === 'http' || keyLower.length < 4) {
                                 continue;
                             }
-                            
+
                             // Skip if value looks like a URL and key is suspicious
                             if (typeof value === 'string' && value.includes('://') && (keyLower.length < 4 || keyLower.includes('://'))) {
                                 continue;
                             }
-                            
+
                             if (!nonHeaderFields.some(field => keyLower.includes(field)) &&
                                 !key.match(/^\d+\.\d+\.\d+\.\d+/) &&
                                 !keyLower.includes('://') &&
                                 (validHeaderNames.some(name => keyLower === name || keyLower.startsWith(name + '-')) ||
-                                 (key.match(/^[a-z][a-z0-9-]{2,}$/i) && key.length >= 4) ||
-                                 keyLower.startsWith('x-') ||
-                                 keyLower === 'apikey' || keyLower === 'api-key')) {
+                                    (key.match(/^[a-z][a-z0-9-]{2,}$/i) && key.length >= 4) ||
+                                    keyLower.startsWith('x-') ||
+                                    keyLower === 'apikey' || keyLower === 'api-key')) {
                                 filtered[key] = value;
                             }
                         }
@@ -1304,9 +1328,9 @@
             }
 
             // Extract URL (usually in quotes after curl command)
-            const urlMatch = curlText.match(/curl\s+(?:-X\s+\w+\s+)?["']?([^"'\s]+)["']?/i) || 
-                            curlText.match(/["'](https?:\/\/[^"'\s]+)["']/i) ||
-                            curlText.match(/(https?:\/\/[^\s\n]+)/i);
+            const urlMatch = curlText.match(/curl\s+(?:-X\s+\w+\s+)?["']?([^"'\s]+)["']?/i) ||
+                curlText.match(/["'](https?:\/\/[^"'\s]+)["']/i) ||
+                curlText.match(/(https?:\/\/[^\s\n]+)/i);
             if (urlMatch) {
                 result.url = urlMatch[1] || urlMatch[0];
             }
@@ -1405,7 +1429,7 @@
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const url = document.getElementById('url').value;
             const method = document.getElementById('method').value;
             const dataText = document.getElementById('data').value;
@@ -1417,7 +1441,7 @@
             let requestData;
             let headers = {};
             let fields = [];
-            
+
             try {
                 requestData = JSON.parse(dataText);
             } catch (error) {
@@ -1463,7 +1487,7 @@
                 try {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 600000);
-                    
+
                     const response = await fetch('/api/scrape-paginated/', {
                         method: 'POST',
                         headers: {
@@ -1479,7 +1503,7 @@
                         }),
                         signal: controller.signal
                     });
-                    
+
                     clearTimeout(timeoutId);
 
                     let result;
@@ -1496,24 +1520,24 @@
                                 const progressResponse = await fetch(`/api/scraping-progress/?job_id=${jobId}`);
                                 if (progressResponse.ok) {
                                     const progressData = await progressResponse.json();
-                                    
+
                                     const progressMessage = document.getElementById('progress-message');
                                     const progressBar = document.getElementById('progress-bar');
                                     const progressStats = document.getElementById('progress-stats');
-                                    
+
                                     if (progressMessage) {
                                         progressMessage.textContent = progressData.message || 'Processing...';
                                     }
-                                    
+
                                     if (progressBar && progressData.total_pages) {
                                         const percent = Math.min(100, (progressData.current_page / progressData.total_pages) * 100);
                                         progressBar.style.width = percent + '%';
                                     }
-                                    
+
                                     if (progressStats) {
                                         progressStats.textContent = `Page ${progressData.current_page}${progressData.total_pages ? ` of ${progressData.total_pages}` : ''} | Records: ${progressData.records_collected || 0}`;
                                     }
-                                    
+
                                     if (progressData.status === 'completed' || progressData.status === 'error') {
                                         clearInterval(progressInterval);
                                     }
@@ -1532,12 +1556,12 @@
                         responseSection.style.display = 'block';
                         statusBadge.textContent = `Error: ${response.status} ${response.statusText}`;
                         statusBadge.className = 'status-badge status-error';
-                        responseContent.textContent = JSON.stringify(result || {error: 'Unknown error'}, null, 2);
+                        responseContent.textContent = JSON.stringify(result || { error: 'Unknown error' }, null, 2);
                         exportCsvBtn.style.display = 'none';
                         exportJsonBtn.style.display = 'none';
                         return;
                     }
-                    
+
                     await new Promise(resolve => setTimeout(resolve, 1500));
                     if (progressInterval) clearInterval(progressInterval);
 
@@ -1547,14 +1571,14 @@
                     submitBtn.disabled = false;
 
                     responseSection.style.display = 'block';
-                    
+
                     if (result.success) {
                         const duplicatesInfo = result.duplicates_removed > 0 ? ` (${result.duplicates_removed} duplicates removed)` : '';
                         statusBadge.textContent = `Scraped ${result.total_records} records from ${result.pages_scraped} pages${duplicatesInfo}`;
                         statusBadge.className = 'status-badge status-success';
-                        
+
                         window.scrapedRecords = result.records;
-                        
+
                         const displayData = {
                             summary: {
                                 total_records: result.total_records,
@@ -1565,7 +1589,7 @@
                             },
                             all_records: result.records
                         };
-                        
+
                         responseContent.textContent = JSON.stringify(displayData, null, 2);
                         exportCsvBtn.style.display = 'inline-block';
                         exportJsonBtn.style.display = 'inline-block';
@@ -1582,18 +1606,18 @@
                     const progressDiv = document.getElementById('progress-display');
                     if (progressDiv) progressDiv.remove();
                     submitBtn.disabled = false;
-                    
+
                     responseSection.style.display = 'block';
                     statusBadge.textContent = 'Error';
                     statusBadge.className = 'status-badge status-error';
-                    
+
                     let errorMsg = error.message;
                     if (error.name === 'AbortError') {
                         errorMsg = 'Request timed out after 10 minutes. Try scraping fewer pages or check your network connection.';
                     } else if (!errorMsg) {
                         errorMsg = 'Network error or server timeout. Please try again with fewer pages.';
                     }
-                    
+
                     responseContent.textContent = `Error: ${errorMsg}`;
                     console.error('Scraping error:', error);
                 }
@@ -1629,13 +1653,13 @@
 
                 // Show response
                 responseSection.style.display = 'block';
-                
+
                 if (result.success) {
                     statusBadge.textContent = `Status: ${result.status_code}`;
                     statusBadge.className = 'status-badge status-success';
                     responseContent.textContent = JSON.stringify(result.data, null, 2);
                     currentRequestId = result.request_id;
-                    
+
                     // Show export buttons if we have records
                     if (result.data && result.data.data && result.data.data.records) {
                         exportCsvBtn.style.display = 'inline-block';
@@ -1644,7 +1668,7 @@
                         exportCsvBtn.style.display = 'none';
                         exportJsonBtn.style.display = 'none';
                     }
-                    
+
                     // Fetch and display available fields
                     fetchAndDisplayAvailableFields(result.data, result.request_id);
                 } else {
@@ -1657,7 +1681,7 @@
             } catch (error) {
                 loading.classList.remove('active');
                 submitBtn.disabled = false;
-                
+
                 responseSection.style.display = 'block';
                 statusBadge.textContent = 'Error';
                 statusBadge.className = 'status-badge status-error';
@@ -1717,7 +1741,7 @@
                 if (obj.hasOwnProperty(key)) {
                     const newKey = parentKey ? `${parentKey}${sep}${key}` : key;
                     const value = obj[key];
-                    
+
                     if (value === null || value === undefined) {
                         items[newKey] = '';
                     } else if (Array.isArray(value)) {
@@ -1741,25 +1765,25 @@
 
         function convertToCSV(records) {
             if (!records || records.length === 0) return '';
-            
+
             // Flatten all records and collect all field names
             const flattenedRecords = [];
             const fieldnames = new Set();
-            
+
             records.forEach(record => {
                 const flattened = flattenDict(record);
                 flattenedRecords.push(flattened);
                 Object.keys(flattened).forEach(key => fieldnames.add(key));
             });
-            
+
             const fields = Array.from(fieldnames).sort();
-            
+
             // Create header row
             const headerRow = fields.map(field => {
                 return '"' + String(field).replace(/"/g, '""') + '"';
             }).join(',');
             const rows = [headerRow];
-            
+
             // Create data rows
             flattenedRecords.forEach(flattenedRecord => {
                 const row = fields.map(field => {
@@ -1773,7 +1797,7 @@
                 });
                 rows.push(row.join(','));
             });
-            
+
             return rows.join('\n');
         }
 
@@ -1814,11 +1838,11 @@
         // Function to extract records from response data
         function extractRecordsFromResponse(responseData) {
             let records = [];
-            
+
             if (!responseData) {
                 return records;
             }
-            
+
             // Handle paginated response structure (summary.all_records or summary.sample_records)
             if (responseData.summary) {
                 if (Array.isArray(responseData.summary.all_records)) {
@@ -1865,7 +1889,7 @@
             else if (responseData.data && typeof responseData.data === 'object' && 'records' in responseData.data) {
                 records = responseData.data.records;
             }
-            
+
             return records;
         }
 
@@ -1874,22 +1898,22 @@
             console.log('fetchAndDisplayAvailableFields called', { responseData, requestId });
             const availableFieldsSection = document.getElementById('availableFieldsSection');
             const availableFieldsContainer = document.getElementById('availableFieldsContainer');
-            
+
             if (!availableFieldsSection || !availableFieldsContainer) {
                 console.error('Available fields section elements not found');
                 return;
             }
-            
+
             try {
                 availableFieldsContainer.innerHTML = '<p style="color: #666; font-style: italic;">Loading available fields...</p>';
                 availableFieldsSection.style.display = 'block';
-                
+
                 // First, try to extract fields client-side as a fallback
                 let fields = [];
                 console.log('Extracting records from responseData:', responseData);
                 const records = extractRecordsFromResponse(responseData);
                 console.log('Extracted records:', records, 'Count:', records ? records.length : 0);
-                
+
                 if (records && records.length > 0) {
                     const sampleRecord = records[0];
                     console.log('Sample record:', sampleRecord);
@@ -1909,7 +1933,7 @@
                         console.log('Extracted', fields.length, 'fields from entire response:', fields.slice(0, 10));
                     }
                 }
-                
+
                 // Try backend only if client-side extraction failed or if we have a request_id
                 // For large responses, we'll send only a sample to the backend
                 if (fields.length === 0 || requestId) {
@@ -1940,13 +1964,13 @@
                             }
                             console.log('Sending sample data to backend (', sampleRecords.length, 'records)');
                         }
-                        
+
                         const requestBody = {
                             response_data: dataToSend,
                             request_id: requestId
                         };
                         console.log('Sending request to /api/available-fields/');
-                        
+
                         const response = await fetch('/api/available-fields/', {
                             method: 'POST',
                             headers: {
@@ -1954,11 +1978,11 @@
                             },
                             body: JSON.stringify(requestBody)
                         });
-                        
+
                         console.log('Response status:', response.status);
                         const result = await response.json();
                         console.log('Response data:', result);
-                        
+
                         if (response.ok && result.success && result.fields && result.fields.length > 0) {
                             fields = result.fields;
                             console.log('Using', fields.length, 'fields from backend');
@@ -1971,7 +1995,7 @@
                 } else {
                     console.log('Using client-side extracted fields, skipping backend call');
                 }
-                
+
                 if (fields.length > 0) {
                     console.log('Displaying', fields.length, 'fields');
                     displayAvailableFields(fields);
@@ -1989,7 +2013,7 @@
         function displayAvailableFields(fields) {
             const container = document.getElementById('availableFieldsContainer');
             container.innerHTML = '';
-            
+
             // Group fields by top-level key for better organization
             const groups = {};
             fields.forEach(field => {
@@ -1999,39 +2023,39 @@
                 }
                 groups[topLevel].push(field);
             });
-            
+
             // Display fields grouped by top-level key
             Object.keys(groups).sort().forEach(groupKey => {
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'field-group';
-                
+
                 const groupTitle = document.createElement('div');
                 groupTitle.className = 'field-group-title';
                 groupTitle.textContent = groupKey;
                 groupDiv.appendChild(groupTitle);
-                
+
                 const fieldsGrid = document.createElement('div');
                 fieldsGrid.className = 'fields-grid';
-                
+
                 groups[groupKey].sort().forEach(field => {
                     const checkboxDiv = document.createElement('div');
                     checkboxDiv.className = 'field-checkbox';
-                    
+
                     const checkbox = document.createElement('input');
                     checkbox.type = 'checkbox';
                     checkbox.id = `field_${field.replace(/\./g, '_')}`;
                     checkbox.value = field;
                     checkbox.dataset.field = field;
-                    
+
                     const label = document.createElement('label');
                     label.htmlFor = checkbox.id;
                     label.textContent = field;
-                    
+
                     checkboxDiv.appendChild(checkbox);
                     checkboxDiv.appendChild(label);
                     fieldsGrid.appendChild(checkboxDiv);
                 });
-                
+
                 groupDiv.appendChild(fieldsGrid);
                 container.appendChild(groupDiv);
             });
@@ -2071,12 +2095,12 @@
         });
 
         // Set active menu item based on current URL
-        (function() {
+        (function () {
             const currentPath = window.location.pathname;
             const menuLinks = document.querySelectorAll('.nav-menu-link');
             menuLinks.forEach(link => {
                 link.classList.remove('active');
-                if (link.getAttribute('href') === currentPath || 
+                if (link.getAttribute('href') === currentPath ||
                     (currentPath === '/' && link.getAttribute('href') === '/') ||
                     (currentPath === '' && link.getAttribute('href') === '/')) {
                     link.classList.add('active');
@@ -2085,5 +2109,5 @@
         })();
     </script>
 </body>
-</html>
 
+</html>

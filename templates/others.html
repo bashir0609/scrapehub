@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Other Scrapers - ScrapeHub</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 5px;
+            list-style: none;
+        }
+
+        .nav-menu-link {
+            display: block;
+            padding: 10px 20px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-menu-link:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .nav-menu-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .scrapers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .scraper-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .scraper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .scraper-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .scraper-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .scraper-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .scraper-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .scraper-link:hover {
+            transform: translateX(5px);
+        }
+
+        .category-title {
+            color: white;
+            font-size: 1.8em;
+            font-weight: 700;
+            margin: 40px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav-header">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span>🔍</span>
+                <span>ScrapeHub</span>
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-menu-link">Universal API Client</a></li>
+                <li><a href="/company-social-finder/" class="nav-menu-link">Company Social Finder</a></li>
+                <li><a href="/social-scraper/" class="nav-menu-link">Social Scraper</a></li>
+                <li><a href="/ecommerce-scraper/" class="nav-menu-link">E-commerce Scraper</a></li>
+                <li><a href="/jobs/" class="nav-menu-link">Jobs</a></li>
+                <li><a href="/others/" class="nav-menu-link active">Others</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🛠️ Other Tools & Scrapers</h1>
+            <p>Additional scraping tools and utilities</p>
+        </div>
+
+        <h2 class="category-title">🔧 Additional Tools</h2>
+        <div class="scrapers-grid">
+            <div class="scraper-card" onclick="window.location.href='/ads-txt-checker/'">
+                <div class="scraper-icon">📄</div>
+                <div class="scraper-title">Ads.txt Checker Pro</div>
+                <div class="scraper-description">
+                    Enterprise-grade bulk validation for ads.txt and app-ads.txt files. CSV upload, live progress,
+                    statistics, and auto-recovery.
+                </div>
+                <a href="/ads-txt-checker/" class="scraper-link">Open Tool →</a>
+            </div>
+
+            <div class="scraper-card" onclick="window.location.href='/rapidapi-scraper/'">
+                <div class="scraper-icon">⚡</div>
+                <div class="scraper-title">RapidAPI Scraper</div>
+                <div class="scraper-description">
+                    Access thousands of APIs through RapidAPI marketplace. Simplified API integration and testing.
+                </div>
+                <a href="/rapidapi-scraper/" class="scraper-link">Open Tool →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">🔗</div>
+                <div class="scraper-title">Link Checker</div>
+                <div class="scraper-description">
+                    Bulk check broken links on websites. Validate internal and external links with detailed reports.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">📧</div>
+                <div class="scraper-title">Email Finder</div>
+                <div class="scraper-description">
+                    Extract and validate email addresses from websites. Bulk email discovery and verification.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">🖼️</div>
+                <div class="scraper-title">Image Scraper</div>
+                <div class="scraper-description">
+                    Download images from websites in bulk. Support for multiple formats and sizes.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">📊</div>
+                <div class="scraper-title">SEO Analyzer</div>
+                <div class="scraper-description">
+                    Analyze website SEO metrics. Check meta tags, headings, keywords, and performance.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">🌍</div>
+                <div class="scraper-title">Sitemap Generator</div>
+                <div class="scraper-description">
+                    Automatically generate XML sitemaps for websites. Crawl and index all pages.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">📱</div>
+                <div class="scraper-title">Mobile App Scraper</div>
+                <div class="scraper-description">
+                    Extract data from mobile app stores. Get app details, reviews, and ratings.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+        </div>
+
+        <h2 class="category-title">📚 Resources</h2>
+        <div class="scrapers-grid">
+            <div class="scraper-card">
+                <div class="scraper-icon">📖</div>
+                <div class="scraper-title">Documentation</div>
+                <div class="scraper-description">
+                    Learn how to use each scraper effectively. API references, examples, and best practices.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">💡</div>
+                <div class="scraper-title">Tutorials</div>
+                <div class="scraper-description">
+                    Step-by-step guides for common scraping tasks. Video tutorials and written guides.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+
+            <div class="scraper-card">
+                <div class="scraper-icon">🎓</div>
+                <div class="scraper-title">API Reference</div>
+                <div class="scraper-description">
+                    Complete API documentation for programmatic access. Code examples in multiple languages.
+                </div>
+                <a href="#" class="scraper-link">Coming Soon →</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

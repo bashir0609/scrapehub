@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ads.txt Checker - ScrapeHub</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            margin-bottom: 20px;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 5px;
+            list-style: none;
+        }
+
+        .nav-menu-link {
+            display: block;
+            padding: 10px 20px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-menu-link:hover {
+            background: #f0f0f0;
+            color: #667eea;
+        }
+
+        .nav-menu-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results-section {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .status-ok {
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .status-error {
+            color: #991b1b;
+            font-weight: 600;
+        }
+
+        .content-preview {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+        }
+
+        .export-btn {
+            background: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .export-btn:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="nav-header">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span>🔍</span>
+                <span>ScrapeHub</span>
+            </a>
+            <ul class="nav-menu">
+                <li><a href="/" class="nav-menu-link">Universal API Client</a></li>
+                <li><a href="/company-social-finder/" class="nav-menu-link">Company Social Finder</a></li>
+                <li><a href="/social-scraper/" class="nav-menu-link">Social Scraper</a></li>
+                <li><a href="/ecommerce-scraper/" class="nav-menu-link">E-commerce Scraper</a></li>
+                <li><a href="/rapidapi-scraper/" class="nav-menu-link">RapidAPI Scraper</a></li>
+                <li><a href="/ads-txt-checker/" class="nav-menu-link active">Ads.txt Checker</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>📄 Ads.txt Checker</h1>
+            <p>Bulk check ads.txt and app-ads.txt files for multiple websites</p>
+        </div>
+
+        <div class="card">
+            <form id="checkForm">
+                <div class="form-group">
+                    <label for="urls">Website URLs (one per line)</label>
+                    <textarea id="urls" name="urls" placeholder="google.com&#10;nytimes.com&#10;example.com"
+                        required></textarea>
+                    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+                        Enter domain names or full URLs. The checker will automatically append /ads.txt and /app-ads.txt
+                    </small>
+                </div>
+
+                <button type="submit" class="btn" id="submitBtn">Check Ads.txt Files</button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;" id="loadingText">Checking ads.txt files...</p>
+                <div id="progressContainer" style="display: none; margin-top: 20px; text-align: left;">
+                    <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border: 2px solid #0ea5e9;">
+                        <div style="margin-bottom: 10px;">
+                            <strong style="color: #0369a1;">Progress:</strong>
+                            <span id="progressText" style="color: #666; margin-left: 10px;">0 / 0</span>
+                        </div>
+                        <div
+                            style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 15px;">
+                            <div id="progressBar"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); height: 100%; width: 0%; transition: width 0.3s;">
+                            </div>
+                        </div>
+                        <div id="currentStatus" style="font-size: 13px; color: #333;">
+                            <div style="margin-bottom: 5px;">
+                                <strong>Current URL:</strong> <span id="currentUrl" style="color: #667eea;">-</span>
+                            </div>
+                            <div style="margin-bottom: 5px;">
+                                <strong>Step:</strong> <span id="currentStep" style="color: #059669;">-</span>
+                            </div>
+                            <div>
+                                <strong>Status:</strong> <span id="stepStatus" style="color: #666;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3>Results</h3>
+                    <div>
+                        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+                        <button class="export-btn" onclick="exportJSON()">Export JSON</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto; max-height: 600px; overflow-y: auto;">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Website</th>
+                                <th colspan="5" style="background: #e0f2fe; text-align: center;">ads.txt</th>
+                                <th colspan="5" style="background: #fef3c7; text-align: center;">app-ads.txt</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th style="background: #e0f2fe;">URL</th>
+                                <th style="background: #e0f2fe;">Status</th>
+                                <th style="background: #e0f2fe;">Result</th>
+                                <th style="background: #e0f2fe;">Has HTML?</th>
+                                <th style="background: #e0f2fe;">Time (ms)</th>
+                                <th style="background: #fef3c7;">URL</th>
+                                <th style="background: #fef3c7;">Status</th>
+                                <th style="background: #fef3c7;">Result</th>
+                                <th style="background: #fef3c7;">Has HTML?</th>
+                                <th style="background: #fef3c7;">Time (ms)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('checkForm');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsBody = document.getElementById('resultsBody');
+        const submitBtn = document.getElementById('submitBtn');
+        let currentResults = [];
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const urls = document.getElementById('urls').value
+                .split('\n')
+                .map(u => u.trim())
+                .filter(u => u);
+
+            if (urls.length === 0) {
+                alert('Please enter at least one URL');
+                return;
+            }
+
+            loading.classList.add('active');
+            resultsSection.classList.remove('active');
+            submitBtn.disabled = true;
+
+            // Show progress container
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const currentUrl = document.getElementById('currentUrl');
+            const currentStep = document.getElementById('currentStep');
+            const stepStatus = document.getElementById('stepStatus');
+
+            progressContainer.style.display = 'block';
+            currentResults = [];
+
+            // Process URLs one by one
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                const progress = ((i + 1) / urls.length) * 100;
+
+                // Update progress
+                progressBar.style.width = progress + '%';
+                progressText.textContent = `${i + 1} / ${urls.length}`;
+                currentUrl.textContent = url;
+                currentStep.textContent = 'Detecting homepage...';
+                stepStatus.textContent = 'In progress';
+
+                try {
+                    // Process single URL
+                    const response = await fetch('/ads-txt-checker/check/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ urls: [url] })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success && data.results.length > 0) {
+                        const result = data.results[0];
+                        currentResults.push(result);
+
+                        // Update step status
+                        currentStep.textContent = 'Checking ads.txt files...';
+                        stepStatus.textContent = `Homepage: ${result.homepage_url || 'N/A'}`;
+
+                        // Add small delay to show the status
+                        await new Promise(resolve => setTimeout(resolve, 300));
+
+                        currentStep.textContent = 'Complete';
+                        stepStatus.textContent = `✓ ads.txt: ${result.ads_txt?.status_code || 'N/A'}, app-ads.txt: ${result.app_ads_txt?.status_code || 'N/A'}`;
+
+                        // Update results table in real-time
+                        displayResults(currentResults);
+                        resultsSection.classList.add('active');
+                    } else {
+                        currentResults.push({
+                            original_url: url,
+                            error: data.error || 'Unknown error'
+                        });
+                    }
+                } catch (error) {
+                    currentResults.push({
+                        original_url: url,
+                        error: error.message
+                    });
+                    stepStatus.textContent = '✗ Error: ' + error.message;
+                }
+
+                // Small delay between URLs
+                if (i < urls.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+            }
+
+            // Final update
+            currentStep.textContent = 'All URLs processed';
+            stepStatus.textContent = `✓ Complete - ${urls.length} URL(s) checked`;
+
+            // Hide loading after a brief moment
+            setTimeout(() => {
+                loading.classList.remove('active');
+                submitBtn.disabled = false;
+            }, 1000);
+        });
+
+        function displayResults(results) {
+            resultsBody.innerHTML = '';
+
+            results.forEach(result => {
+                const row = document.createElement('tr');
+
+                const ads = result.ads_txt || {};
+                const appAds = result.app_ads_txt || {};
+                const homepageUrl = result.homepage_url || result.normalized_url || '-';
+                const detectionStatus = result.homepage_detection || 'N/A';
+
+                row.innerHTML = `
+                    <td>
+                        <strong>${result.original_url}</strong><br>
+                        <small style="color: #666;">→ ${homepageUrl}</small><br>
+                        <small style="color: #059669;">${detectionStatus}</small>
+                    </td>
+                    <td style="font-size: 11px;">${ads.url || '-'}</td>
+                    <td class="${ads.status_code === 200 ? 'status-ok' : 'status-error'}">${ads.status_code || '-'}</td>
+                    <td class="${ads.result_text === 'OK' ? 'status-ok' : 'status-error'}">${ads.result_text || '-'}</td>
+                    <td>${ads.has_html || '-'}</td>
+                    <td>${ads.time_ms || '-'}</td>
+                    <td style="font-size: 11px;">${appAds.url || '-'}</td>
+                    <td class="${appAds.status_code === 200 ? 'status-ok' : 'status-error'}">${appAds.status_code || '-'}</td>
+                    <td class="${appAds.result_text === 'OK' ? 'status-ok' : 'status-error'}">${appAds.result_text || '-'}</td>
+                    <td>${appAds.has_html || '-'}</td>
+                    <td>${appAds.time_ms || '-'}</td>
+                `;
+
+                resultsBody.appendChild(row);
+            });
+
+            resultsSection.classList.add('active');
+        }
+
+        function exportCSV() {
+            const headers = ['Website', 'ads.txt URL', 'ads.txt Status', 'ads.txt Result', 'ads.txt Has HTML', 'ads.txt Time (ms)',
+                'app-ads.txt URL', 'app-ads.txt Status', 'app-ads.txt Result', 'app-ads.txt Has HTML', 'app-ads.txt Time (ms)'];
+
+            const rows = currentResults.map(r => [
+                r.original_url,
+                r.ads_txt?.url || '',
+                r.ads_txt?.status_code || '',
+                r.ads_txt?.result_text || '',
+                r.ads_txt?.has_html || '',
+                r.ads_txt?.time_ms || '',
+                r.app_ads_txt?.url || '',
+                r.app_ads_txt?.status_code || '',
+                r.app_ads_txt?.result_text || '',
+                r.app_ads_txt?.has_html || '',
+                r.app_ads_txt?.time_ms || ''
+            ]);
+
+            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+            downloadFile(csv, 'ads-txt-results.csv', 'text/csv');
+        }
+
+        function exportJSON() {
+            const json = JSON.stringify(currentResults, null, 2);
+            downloadFile(json, 'ads-txt-results.json', 'application/json');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+
+</html>

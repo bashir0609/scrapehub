@@ -16,3 +16,7 @@ fake-useragent>=1.4.0
 pandas>=2.1.0
 openpyxl>=3.1.0
 
+# Background Tasks
+celery==5.3.4
+redis==5.0.1
+

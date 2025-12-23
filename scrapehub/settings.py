@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     'scrapers.universal_api',
     'scrapers.company_social_finder',
     'scrapers.ecommerce_scraper',
+    'scrapers.ads_txt_checker',
+    'scrapers.jobs',
 ]
 
 MIDDLEWARE = [
@@ -158,4 +160,14 @@ CORS_ALLOW_ALL_ORIGINS = True  # For development only
 
 # Increase data upload size limit for large API responses
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB (default is 2.5 MB)
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
 

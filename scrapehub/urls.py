@@ -11,6 +11,9 @@ urlpatterns = [
     path('', include('scrapers.universal_api.urls')),
     path('', include('scrapers.company_social_finder.urls')),
     path('', include('scrapers.ecommerce_scraper.urls')),
+    path('ads-txt-checker/', include('scrapers.ads_txt_checker.urls')),
+    path('jobs/', include('scrapers.jobs.urls')),
+    path('others/', include('scrapers.others_urls')),
 ]
 
 # Serve media files during development

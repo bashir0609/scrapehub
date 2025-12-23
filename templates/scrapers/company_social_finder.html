@@ -1303,40 +1303,374 @@
             }
         });
 
+        // Helper function to convert any value to a string
+        function valueToString(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            if (typeof value === 'boolean') {
+                return value ? 'true' : 'false';
+            }
+            if (typeof value === 'number') {
+                return String(value);
+            }
+            if (typeof value === 'string') {
+                return value;
+            }
+            if (Array.isArray(value)) {
+                // Convert array to JSON string
+                return JSON.stringify(value);
+            }
+            if (typeof value === 'object') {
+                // Convert objects to JSON string
+                try {
+                    return JSON.stringify(value);
+                } catch (e) {
+                    // Fallback if JSON.stringify fails
+                    return String(value);
+                }
+            }
+            return String(value);
+        }
+
+        // Helper function to flatten nested objects
+        function flattenObject(obj, prefix = '', result = {}) {
+            if (obj === null || obj === undefined) {
+                return result;
+            }
+            
+            // Handle arrays
+            if (Array.isArray(obj)) {
+                if (obj.length === 0) {
+                    if (prefix) {
+                        result[prefix] = '';
+                    }
+                } else if (obj.length === 1) {
+                    // Single item array - flatten it
+                    if (typeof obj[0] === 'object' && obj[0] !== null && !Array.isArray(obj[0])) {
+                        flattenObject(obj[0], prefix, result);
+                    } else {
+                        result[prefix || 'value'] = valueToString(obj[0]);
+                    }
+                } else {
+                    // Multiple items - join with semicolon
+                    const stringValues = obj.map(item => {
+                        if (item === null || item === undefined) {
+                            return '';
+                        }
+                        if (typeof item === 'object') {
+                            return JSON.stringify(item);
+                        }
+                        return String(item);
+                    }).filter(v => v !== '');
+                    result[prefix || 'value'] = stringValues.join('; ');
+                }
+                return result;
+            }
+            
+            // Handle non-objects (primitives)
+            if (typeof obj !== 'object') {
+                if (prefix) {
+                    result[prefix] = valueToString(obj);
+                }
+                return result;
+            }
+            
+            // Handle objects
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key) && obj[key] !== undefined) {
+                    const newKey = prefix ? `${prefix}.${key}` : key;
+                    const value = obj[key];
+                    
+                    if (value === null) {
+                        result[newKey] = '';
+                    } else if (Array.isArray(value)) {
+                        // Handle arrays
+                        if (value.length === 0) {
+                            result[newKey] = '';
+                        } else if (value.length === 1) {
+                            // Single item array - flatten it
+                            if (typeof value[0] === 'object' && value[0] !== null && !Array.isArray(value[0])) {
+                                flattenObject(value[0], newKey, result);
+                            } else {
+                                result[newKey] = valueToString(value[0]);
+                            }
+                        } else {
+                            // Multiple items - join with semicolon
+                            const stringValues = value.map(item => {
+                                if (item === null || item === undefined) {
+                                    return '';
+                                }
+                                if (typeof item === 'object') {
+                                    return JSON.stringify(item);
+                                }
+                                return String(item);
+                            }).filter(v => v !== '');
+                            result[newKey] = stringValues.join('; ');
+                        }
+                    } else if (typeof value === 'object' && value !== null) {
+                        // Recursively flatten nested objects
+                        flattenObject(value, newKey, result);
+                    } else {
+                        result[newKey] = valueToString(value);
+                    }
+                }
+            }
+            return result;
+        }
+
         exportCsvBtn.addEventListener('click', () => {
             if (!currentData) return;
             
-            // Convert to CSV
-            const headers = Object.keys(currentData);
-            const rows = [];
-            
-            // Check if any value is an array
-            const hasArrays = Object.values(currentData).some(v => Array.isArray(v));
-            const maxLength = hasArrays ? Math.max(...Object.values(currentData).map(v => Array.isArray(v) ? v.length : 1)) : 1;
-            
-            for (let i = 0; i < maxLength; i++) {
-                const row = headers.map(header => {
-                    const value = currentData[header];
-                    if (Array.isArray(value)) {
-                        return value[i] || '';
+            try {
+                let records = [];
+                
+                // Handle different data structures
+                if (currentData.results && Array.isArray(currentData.results)) {
+                    // Bulk scraping results - each result has {url, success, data, status_code, error}
+                    records = currentData.results.map(result => {
+                        // Start with metadata fields
+                        const record = {};
+                        
+                        // Add URL
+                        if (result.url) {
+                            record['URL'] = String(result.url);
+                        }
+                        
+                        // Add Success
+                        if (result.success !== undefined) {
+                            record['Success'] = result.success ? 'Yes' : 'No';
+                        }
+                        
+                        // Add Status Code
+                        if (result.status_code !== undefined) {
+                            record['Status Code'] = String(result.status_code);
+                        }
+                        
+                        // Add Error
+                        if (result.error) {
+                            record['Error'] = String(result.error);
+                        }
+                        
+                        // Extract actual data from result.data or result.extracted_data
+                        const data = result.data || result.extracted_data || {};
+                        
+                        // Flatten and merge the extracted data
+                        const flattenedData = flattenObject(data);
+                        for (const key in flattenedData) {
+                            if (flattenedData.hasOwnProperty(key)) {
+                                record[key] = flattenedData[key];
+                            }
+                        }
+                        
+                        // Add summary info if available
+                        if (currentData.summary) {
+                            if (currentData.summary.total_urls !== undefined) {
+                                record['_Summary_Total_URLs'] = String(currentData.summary.total_urls);
+                            }
+                            if (currentData.summary.completed !== undefined) {
+                                record['_Summary_Completed'] = String(currentData.summary.completed);
+                            }
+                            if (currentData.summary.failed !== undefined) {
+                                record['_Summary_Failed'] = String(currentData.summary.failed);
+                            }
+                        }
+                        
+                        return record;
+                    });
+                } else if (Array.isArray(currentData)) {
+                    // Direct array of records - assume each is a result object
+                    records = currentData.map(result => {
+                        const record = {
+                            'URL': result.url || '',
+                            'Success': result.success !== undefined ? (result.success ? 'Yes' : 'No') : '',
+                            'Status Code': result.status_code || '',
+                            'Error': result.error || ''
+                        };
+                        
+                        const data = result.data || result.extracted_data || result;
+                        const flattenedData = flattenObject(data);
+                        Object.assign(record, flattenedData);
+                        
+                        return record;
+                    });
+                } else if (currentData.extracted_data) {
+                    // Single scraping result with extracted_data
+                    const record = {
+                        'URL': currentData.url || '',
+                        'Success': 'Yes',
+                        'Status Code': currentData.status_code || ''
+                    };
+                    const flattenedData = flattenObject(currentData.extracted_data);
+                    Object.assign(record, flattenedData);
+                    records = [record];
+                } else if (currentData.data) {
+                    // Single result with data field
+                    const record = {
+                        'URL': currentData.url || '',
+                        'Success': currentData.success !== undefined ? (currentData.success ? 'Yes' : 'No') : '',
+                        'Status Code': currentData.status_code || '',
+                        'Error': currentData.error || ''
+                    };
+                    const flattenedData = flattenObject(currentData.data);
+                    Object.assign(record, flattenedData);
+                    records = [record];
+                } else {
+                    // Single object - treat as one record
+                    const record = {
+                        'URL': currentData.url || '',
+                        'Success': currentData.success !== undefined ? (currentData.success ? 'Yes' : 'No') : ''
+                    };
+                    const flattenedData = flattenObject(currentData);
+                    Object.assign(record, flattenedData);
+                    records = [record];
+                }
+                
+                if (records.length === 0) {
+                    alert('No data to export');
+                    return;
+                }
+                
+                // Flatten all records (in case there are still nested structures)
+                const flattenedRecords = records.map(record => {
+                    // First flatten the record
+                    const flattened = flattenObject(record);
+                    
+                    // Then ensure all values are strings (no objects left)
+                    const cleaned = {};
+                    for (const key in flattened) {
+                        if (flattened.hasOwnProperty(key)) {
+                            let val = flattened[key];
+                            
+                            // Convert to string, handling all edge cases
+                            if (val === null || val === undefined) {
+                                cleaned[key] = '';
+                            } else if (typeof val === 'boolean') {
+                                cleaned[key] = val ? 'true' : 'false';
+                            } else if (typeof val === 'number') {
+                                cleaned[key] = String(val);
+                            } else if (typeof val === 'string') {
+                                cleaned[key] = val;
+                            } else if (Array.isArray(val)) {
+                                // Convert array to JSON string
+                                try {
+                                    cleaned[key] = JSON.stringify(val);
+                                } catch (e) {
+                                    cleaned[key] = String(val);
+                                }
+                            } else if (typeof val === 'object') {
+                                // Convert object to JSON string
+                                try {
+                                    cleaned[key] = JSON.stringify(val);
+                                } catch (e) {
+                                    // If JSON.stringify fails, try toString
+                                    const str = String(val);
+                                    // If it's still [object Object], try to inspect it
+                                    if (str === '[object Object]') {
+                                        try {
+                                            cleaned[key] = JSON.stringify(val, null, 2);
+                                        } catch (e2) {
+                                            cleaned[key] = '';
+                                        }
+                                    } else {
+                                        cleaned[key] = str;
+                                    }
+                                }
+                            } else {
+                                cleaned[key] = String(val);
+                            }
+                        }
                     }
-                    return i === 0 ? value : '';
+                    return cleaned;
                 });
-                rows.push(row);
+                
+                // Collect all unique field names
+                const allFields = new Set();
+                flattenedRecords.forEach(record => {
+                    Object.keys(record).forEach(key => allFields.add(key));
+                });
+                
+                // Sort headers: URL, Success, Status Code, Error first, then alphabetically
+                // Exclude any keys that look like they might be objects
+                const priorityFields = ['URL', 'Success', 'Status Code', 'Error'];
+                const otherFields = Array.from(allFields)
+                    .filter(f => !priorityFields.includes(f) && !f.startsWith('_summary'))
+                    .sort();
+                const headers = [...priorityFields.filter(f => allFields.has(f)), ...otherFields];
+                
+                // Build CSV content
+                const csvRows = [];
+                
+                // Add header row
+                csvRows.push(headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','));
+                
+                // Add data rows
+                flattenedRecords.forEach(record => {
+                    const row = headers.map(header => {
+                        let value = record[header];
+                        
+                        // If value is undefined or null, use empty string
+                        if (value === undefined || value === null) {
+                            value = '';
+                        }
+                        
+                        // Ensure value is always a string
+                        let stringValue;
+                        if (typeof value === 'string') {
+                            stringValue = value;
+                        } else if (typeof value === 'object') {
+                            // This shouldn't happen if flattening worked, but handle it anyway
+                            try {
+                                stringValue = JSON.stringify(value);
+                            } catch (e) {
+                                stringValue = String(value);
+                            }
+                        } else {
+                            stringValue = String(value);
+                        }
+                        
+                        // Check if this looks like a phone number or long number that Excel might convert
+                        // Phone numbers often start with + or contain spaces, dashes, parentheses
+                        const isPhoneNumber = /^[\+\d\s\-\(\)]+$/.test(stringValue) && 
+                                             (stringValue.includes('+') || stringValue.includes(' ') || 
+                                              stringValue.includes('-') || stringValue.includes('(') ||
+                                              stringValue.length > 10);
+                        
+                        // Check if it's a long numeric string (Excel will convert to scientific notation)
+                        const isLongNumber = /^\d+$/.test(stringValue) && stringValue.length > 10;
+                        
+                        // For phone numbers and long numbers, prepend with tab to force Excel to treat as text
+                        // Or use the formula approach: ="value" to force text interpretation
+                        if (isPhoneNumber || isLongNumber) {
+                            // Prepend with single quote to force Excel to treat as text
+                            // Or use the formula approach
+                            stringValue = '="' + stringValue.replace(/"/g, '""') + '"';
+                        } else {
+                            // Escape quotes and wrap in quotes normally
+                            stringValue = '"' + stringValue.replace(/"/g, '""') + '"';
+                        }
+                        
+                        return stringValue;
+                    });
+                    csvRows.push(row.join(','));
+                });
+                
+                const csvContent = csvRows.join('\n');
+                
+                // Create and download file
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `scraped_data_${new Date().getTime()}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                console.error('Error exporting CSV:', error);
+                alert('Error exporting CSV: ' + error.message);
             }
-            
-            const csvContent = [
-                headers.join(','),
-                ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-            ].join('\n');
-            
-            const blob = new Blob([csvContent], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'scraped_data.csv';
-            a.click();
-            window.URL.revokeObjectURL(url);
         });
 
         exportJsonBtn.addEventListener('click', () => {
