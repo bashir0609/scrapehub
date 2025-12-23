@@ -1,0 +1,66 @@
+services:
+  # Web Service
+  - type: web
+    name: scrapehub-web
+    env: python
+    buildCommand: "./setup.sh" # We'll create this to run migrations and collectstatic
+    startCommand: "gunicorn scrapehub.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scrapehub-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: scrapehub-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: scrapehub-redis
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*" # Update to your Render URL later
+
+  # Celery Worker
+  - type: worker
+    name: scrapehub-worker
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "celery -A scrapehub worker --loglevel=info"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scrapehub-db
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: scrapehub-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: scrapehub-redis
+          property: connectionString
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: scrapehub-web
+          key: SECRET_KEY
+
+# Managed Database
+databases:
+  - name: scrapehub-db
+    plan: free # Change to a paid plan if you need more storage
+
+# Managed Redis
+redis:
+  - name: scrapehub-redis
+    plan: free
+    ipAllowList: [] # Only allow internal access
