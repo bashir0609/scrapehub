@@ -5,30 +5,47 @@ import time
 
 
 @shared_task(bind=True)
-def process_ads_txt_job(self, job_id, urls):
+def process_ads_txt_job(self, job_id, urls, start_index=0):
     """
     Celery task to process ads.txt checking job in the background.
     Updates Job model with progress and results.
     """
-    print(f"=== TASK STARTED: job_id={job_id}, urls_count={len(urls)} ===")
+    print(f"=== TASK STARTED: job_id={job_id}, urls_count={len(urls)}, start_index={start_index} ===")
     try:
         # Get the job
         job = Job.objects.get(job_id=job_id)
         print(f"=== JOB FOUND: {job.job_id}, status={job.status} ===")
+        
         job.status = 'running'
         job.total_items = len(urls)
         job.save()
         
-        # Create started event
-        JobEvent.objects.create(
-            job=job,
-            event_type='started',
-            message=f'Started processing {len(urls)} URLs'
-        )
+        # Determine effective start index
+        if start_index > 0:
+            effective_start_index = start_index
+            JobEvent.objects.create(
+                job=job,
+                event_type='resumed',
+                message=f'Resuming processing from item {start_index + 1}/{len(urls)}'
+            )
+        else:
+            effective_start_index = 0
+            # Create started event only if starting from scratch
+            JobEvent.objects.create(
+                job=job,
+                event_type='started',
+                message=f'Started processing {len(urls)} URLs'
+            )
         
-        results = []
+        # Initialize results with existing data if resuming
+        results = job.results_data if job.results_data else []
         
-        for index, url_input in enumerate(urls):
+        # Only process the slice of URLs starting from effective_start_index
+        urls_to_process = urls[effective_start_index:]
+        
+        for i, url_input in enumerate(urls_to_process):
+            # Calculate actual index in the full list
+            index = effective_start_index + i
             # Check if job should pause/stop
             job.refresh_from_db()
             if job.status == 'paused':

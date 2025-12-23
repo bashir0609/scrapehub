@@ -91,10 +91,21 @@ def resume_job(request, job_id):
         job.retry_count = 0
         job.save()
         
+        if job.input_data and 'urls' in job.input_data:
+            # Re-trigger the Celery task from the last processed item
+            from scrapers.ads_txt_checker.tasks import process_ads_txt_job
+            current_index = job.processed_items
+            process_ads_txt_job.delay(str(job.job_id), job.input_data['urls'], start_index=current_index)
+            
+            message = f'Job manually resumed by user (Worker restarted at item {current_index})'
+        else:
+            # Legacy behavior for jobs without saved input_data
+            message = 'Job manually resumed by user'
+            
         JobEvent.objects.create(
             job=job,
             event_type='resumed',
-            message='Job manually resumed by user'
+            message=message
         )
         
         return JsonResponse({'success': True, 'status': 'running'})

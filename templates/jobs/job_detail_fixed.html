@@ -384,8 +384,8 @@
             updateUI({
                 results_data: results,
                 status: "{{ job.status }}",
-                progress: {{ job.progress_percentage|default:0 }},
-                processed_items: {{ job.processed_items|default:0 }}
+                progress: {{ job.progress_percentage |default: 0 }},
+            processed_items: { { job.processed_items |default: 0 } }
             });
 
         {% if job.status == 'running' or job.status == 'paused' or job.status == 'auto_paused' %}

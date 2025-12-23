@@ -32,6 +32,7 @@ class Job(models.Model):
     error_message = models.TextField(null=True, blank=True)
     retry_count = models.IntegerField(default=0)
     auto_pause_reason = models.TextField(null=True, blank=True)
+    input_data = models.JSONField(null=True, blank=True)  # Store original input (e.g. list of URLs)
     
     class Meta:
         ordering = ['-created_at']

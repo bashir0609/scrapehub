@@ -192,7 +192,8 @@ def submit_job(request):
             scraper_type='ads_txt_checker',
             status='running',
             total_items=len(urls),
-            processed_items=0
+            processed_items=0,
+            input_data={'urls': urls}  # Save inputs for resumption
         )
         
         # Submit to Celery
