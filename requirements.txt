@@ -18,6 +18,7 @@ openpyxl>=3.1.0
 
 # Background Tasks
 celery==5.3.4
+redis==4.6.0
 
 # Production & Deployment
 gunicorn==21.2.0
