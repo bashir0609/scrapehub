@@ -1,12 +1,10 @@
-from celery import shared_task
 from scrapers.jobs.models import Job, JobEvent
 from scrapers.ads_txt_checker.views import detect_homepage_url, check_file
 from django.utils import timezone
 import time
 
 
-@shared_task(bind=True)
-def process_ads_txt_job(self, job_id, urls, start_index=0):
+def process_ads_txt_job(job_id, urls, start_index=0):
     """
     Celery task to process ads.txt checking job in the background.
     Updates Job model with progress and results.
@@ -49,6 +47,12 @@ def process_ads_txt_job(self, job_id, urls, start_index=0):
             index = effective_start_index + i
             # Check if job should pause/stop
             job.refresh_from_db()
+            
+            # Check if job was stopped or failed
+            if job.status in ['stopped', 'failed']:
+                print(f"Job {job_id} was stopped/failed, exiting task")
+                return {'success': False, 'error': f'Job was {job.status}'}
+            
             if job.status == 'paused':
                 JobEvent.objects.create(
                     job=job,
@@ -149,17 +153,31 @@ def process_ads_txt_job(self, job_id, urls, start_index=0):
                 # Just update processed count
                 job.save()
         
-        # Job completed
-        job.status = 'completed'
-        job.results_data = results
-        job.completed_at = timezone.now()
-        job.save()
+        print(f"=== PROCESSING COMPLETE: job_id={job_id}, processed={len(results)}/{len(urls)} ===")
         
-        JobEvent.objects.create(
-            job=job,
-            event_type='completed',
-            message=f'Successfully processed {len(urls)} URLs'
-        )
+        # Job completed - wrap in try-except to catch any completion errors
+        try:
+            job.refresh_from_db()  # Get latest status
+            if job.status == 'running':  # Only complete if still running
+                print(f"=== SETTING JOB TO COMPLETED: job_id={job_id} ===")
+                job.status = 'completed'
+                job.results_data = results
+                job.completed_at = timezone.now()
+                job.save()
+                
+                JobEvent.objects.create(
+                    job=job,
+                    event_type='completed',
+                    message=f'Successfully processed {len(urls)} URLs'
+                )
+                print(f"=== JOB COMPLETED SUCCESSFULLY: job_id={job_id} ===")
+            else:
+                print(f"=== JOB STATUS CHANGED TO {job.status}, NOT COMPLETING ===")
+        except Exception as completion_error:
+            print(f"ERROR completing job {job_id}: {str(completion_error)}")
+            import traceback
+            traceback.print_exc()
+            raise
         
         return {'success': True, 'results': results}
         

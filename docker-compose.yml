@@ -1,7 +1,7 @@
 services:
   web:
     build: .
-    command: sh -c "sleep 5 && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "sleep 5 && python manage.py migrate && python manage.py qcluster & python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
@@ -15,37 +15,8 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       - db
-      - redis
-    restart: unless-stopped
-
-  celery:
-    build: .
-    command: celery -A scrapehub worker --loglevel=info
-    volumes:
-      - .:/app
-    environment:
-      - DEBUG=1
-      - SECRET_KEY=django-insecure-your-secret-key-change-in-production
-      - POSTGRES_DB=scrapehub
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
     restart: unless-stopped
 
   db:

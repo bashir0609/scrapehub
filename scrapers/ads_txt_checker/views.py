@@ -196,13 +196,13 @@ def submit_job(request):
             input_data={'urls': urls}  # Save inputs for resumption
         )
         
-        # Submit to Celery
-        task = process_ads_txt_job.delay(str(job.job_id), urls)
+        # Submit to Django-Q2 background task queue
+        from django_q.tasks import async_task
+        task_id = async_task(process_ads_txt_job, str(job.job_id), urls)
         
         return JsonResponse({
             'success': True,
             'job_id': str(job.job_id),
-            'task_id': task.id,
             'message': f'Job submitted with {len(urls)} URLs'
         })
         
