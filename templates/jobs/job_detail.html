@@ -45,7 +45,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 1.5em;
+            font-size: 1.2em;
             font-weight: 700;
             color: #667eea;
             text-decoration: none;
@@ -132,7 +132,7 @@
         }
 
         .card-title {
-            font-size: 1.5em;
+            font-size: 1.2em;
             font-weight: 700;
             color: #2d3748;
         }
@@ -167,7 +167,8 @@
 
             50% {
                 opacity: 0.5;
-            }}
+            }
+        }
 
         .job-id {
             font-size: 0.9em;
@@ -221,12 +222,12 @@
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-top: 24px;
+            gap: 10px;
+            margin-top: 15px;
         }
 
         .info-item {
-            padding: 20px;
+            padding: 10px;
             background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
             border-radius: 12px;
             border: 1px solid #e2e8f0;
@@ -248,7 +249,7 @@
         }
 
         .info-value {
-            font-size: 1.5em;
+            font-size: 1em;
             font-weight: 700;
             color: #1e293b;
         }
@@ -283,7 +284,8 @@
 
             100% {
                 background-position: -200% 0;
-            }}
+            }
+        }
 
         .progress-text {
             position: absolute;
@@ -594,7 +596,7 @@
 
             {% if job.auto_pause_reason %}
             <div class="alert-box alert-warning">
-                <span style="font-size: 1.5em;">⚠️</span>
+                <span style="font-size: 1.2em;">⚠️</span>
                 <div>
                     <strong>Auto-Pause Reason:</strong><br>
                     {{ job.auto_pause_reason }}
@@ -604,7 +606,7 @@
 
             {% if job.error_message %}
             <div class="alert-box alert-error">
-                <span style="font-size: 1.5em;">❌</span>
+                <span style="font-size: 1.2em;">❌</span>
                 <div>
                     <strong>Error:</strong><br>
                     {{ job.error_message }}
@@ -704,7 +706,8 @@
                 const resultsEl = document.getElementById('results-data');
                 if (resultsEl) {
                     results = JSON.parse(resultsEl.textContent) || [];
-                }} catch (e) {
+                }
+            } catch (e) {
                 console.error("Error parsing results data:", e);
             }
 
@@ -720,7 +723,8 @@
                         if (r.app_ads_txt) {
                             if (r.app_ads_txt.status_code === 200) stats.appS++;
                             else stats.appE++;
-                        }});
+                        }
+                    });
 
                     document.getElementById('countAdsSuccess').textContent = stats.adsS;
                     document.getElementById('countAppAdsSuccess').textContent = stats.appS;
@@ -730,7 +734,8 @@
 
                     if (data.status === 'completed' || data.status === 'failed') {
                         document.getElementById('downloadContainer').style.display = 'block';
-                    }}
+                    }
+                }
 
                 if (data.progress !== undefined) {
                     document.getElementById('progressText').textContent = data.progress;
@@ -741,14 +746,15 @@
 
                 if (data.processed_items !== undefined) {
                     document.getElementById('statProcessedItems').textContent = data.processed_items;
-                }}
+                }
+            }
 
             // Initial UI update
             updateUI({
                 results_data: results,
                 status: "{{ job.status }}",
-                progress: {{ job.progress_percentage |default:0 }},
-            processed_items: {{ job.processed_items |default:0 }}
+                progress: {{ job.progress_percentage|default:0 }},
+            processed_items: {{ job.processed_items|default:0 }}
             });
 
         {% if job.status == 'running' or job.status == 'paused' or job.status == 'auto_paused' %}
@@ -761,10 +767,12 @@
                     setTimeout(() => location.reload(), 2000);
                 } else {
                     setTimeout(poll, 3000);
-                }} catch (e) {
+                }
+            } catch (e) {
                 console.error("Polling error:", e);
                 setTimeout(poll, 5000);
-            }}
+            }
+        }
         poll();
         {% endif %}
 
@@ -779,16 +787,16 @@
 
         window.pauseJob = async () => {
             if (!confirm('Pause this job?')) return;
-            const res = await fetch(`/jobs/api/${jobId}/pause/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' }});
+            const res = await fetch(`/jobs/api/${jobId}/pause/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
             if (res.ok) location.reload();
         };
         window.resumeJob = async () => {
-            const res = await fetch(`/jobs/api/${jobId}/resume/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' }});
+            const res = await fetch(`/jobs/api/${jobId}/resume/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
             if (res.ok) location.reload();
         };
         window.stopJob = async () => {
             if (!confirm('Stop this job? This action cannot be undone.')) return;
-            const res = await fetch(`/jobs/api/${jobId}/stop/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' }});
+            const res = await fetch(`/jobs/api/${jobId}/stop/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
             if (res.ok) location.reload();
         };
         }) ();

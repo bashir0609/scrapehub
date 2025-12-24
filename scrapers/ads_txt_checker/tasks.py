@@ -1,6 +1,7 @@
 from celery import shared_task
 from scrapers.jobs.models import Job, JobEvent
 from scrapers.ads_txt_checker.views import detect_homepage_url, check_file
+from django.utils import timezone
 import time
 
 
@@ -151,7 +152,7 @@ def process_ads_txt_job(self, job_id, urls, start_index=0):
         # Job completed
         job.status = 'completed'
         job.results_data = results
-        job.completed_at = time.time()
+        job.completed_at = timezone.now()
         job.save()
         
         JobEvent.objects.create(
