@@ -1,5 +1,5 @@
-# Use Python 3.12 slim image (required for Django 6.0)
-FROM python:3.12-slim
+# Use Python 3.11 slim image
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
@@ -40,5 +40,5 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8000
 
-# Command for production (migrations + worker + gunicorn)
-CMD ["sh", "-c", "python manage.py migrate && python manage.py runworker & exec gunicorn scrapehub.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
+# Command for production (migrations + Django-Q2 worker + gunicorn)
+CMD ["sh", "-c", "python manage.py migrate && python manage.py qcluster & exec gunicorn scrapehub.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]

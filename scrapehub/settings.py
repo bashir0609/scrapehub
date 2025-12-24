@@ -31,7 +31,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.tasks',  # Django 6.0 native background tasks
+    'django.contrib.tasks',  # Django 6.0 task framework
+    'django_q',  # Django-Q2 as task backend
     'corsheaders',
     'scrapers.universal_api',
     'scrapers.company_social_finder',
@@ -179,16 +180,15 @@ CORS_ALLOW_ALL_ORIGINS = True  # For development only
 # Increase data upload size limit for large API responses
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB (default is 2.5 MB)
 
-# Django 6.0 Native Background Tasks Configuration
-TASKS = {
-    'default': {
-        'BACKEND': 'django.tasks.backends.database.DatabaseBackend',
-        'OPTIONS': {
-            'max_workers': 4,  # Number of concurrent workers
-        }
-    }
+# Django-Q2 Configuration (Task backend for Django 6.0)
+Q_CLUSTER = {
+    'name': 'scrapehub',
+    'workers': 4,
+    'recycle': 500,
+    'timeout': 43200,  # 12 hours for long-running scraping jobs
+    'retry': 43800,  # 12 hours + 10 minutes
+    'queue_limit': 50,
+    'bulk': 10,
+    'orm': 'default',  # Use PostgreSQL
+    'catch_up': False,
 }
-
-# Task queue settings
-TASK_QUEUE_MAX_RETRIES = 3
-TASK_QUEUE_RETRY_DELAY = 60  # seconds
