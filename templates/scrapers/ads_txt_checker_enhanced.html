@@ -195,19 +195,6 @@
             border-radius: 6px;
         }
 
-        .stats-panel {
-            display: none;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 2px solid #0ea5e9;
-        }
-
-        .stats-panel.active {
-            display: block;
-        }
-
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -410,63 +397,7 @@
             <p>Enterprise-grade bulk ads.txt and app-ads.txt validation</p>
         </div>
 
-        <!-- Statistics Panel -->
-        <div class="stats-panel" id="statsPanel">
-            <h3 style="color: #0369a1; margin-bottom: 10px;">📊 Statistics</h3>
-            <div style="margin-bottom: 15px;">
-                <strong>Overall</strong>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total URLs</div>
-                    <div class="stat-value" id="statTotal">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Processed</div>
-                    <div class="stat-value" id="statProcessed">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Avg Time</div>
-                    <div class="stat-value" id="statAvgTime">0ms</div>
-                </div>
-            </div>
 
-            <div style="margin: 15px 0 10px 0;">
-                <strong style="color: #0ea5e9;">ads.txt Statistics</strong>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card" style="border-left: 4px solid #0ea5e9;">
-                    <div class="stat-label">Success (200)</div>
-                    <div class="stat-value" id="statAdsSuccess">0</div>
-                </div>
-                <div class="stat-card" style="border-left: 4px solid #0ea5e9;">
-                    <div class="stat-label">Not Found (404)</div>
-                    <div class="stat-value" id="statAdsNotFound">0</div>
-                </div>
-                <div class="stat-card" style="border-left: 4px solid #0ea5e9;">
-                    <div class="stat-label">Errors</div>
-                    <div class="stat-value" id="statAdsErrors">0</div>
-                </div>
-            </div>
-
-            <div style="margin: 15px 0 10px 0;">
-                <strong style="color: #f59e0b;">app-ads.txt Statistics</strong>
-            </div>
-            <div class="stats-grid">
-                <div class="stat-card" style="border-left: 4px solid #f59e0b;">
-                    <div class="stat-label">Success (200)</div>
-                    <div class="stat-value" id="statAppAdsSuccess">0</div>
-                </div>
-                <div class="stat-card" style="border-left: 4px solid #f59e0b;">
-                    <div class="stat-label">Not Found (404)</div>
-                    <div class="stat-value" id="statAppAdsNotFound">0</div>
-                </div>
-                <div class="stat-card" style="border-left: 4px solid #f59e0b;">
-                    <div class="stat-label">Errors</div>
-                    <div class="stat-value" id="statAppAdsErrors">0</div>
-                </div>
-            </div>
-        </div>
 
         <div class="card">
             <form id="checkForm">
@@ -705,13 +636,22 @@
                 // Show loading and progress
                 document.getElementById('loading').classList.add('active');
                 document.getElementById('progressContainer').classList.add('active');
-                document.getElementById('statsPanel').classList.add('active');
                 document.getElementById('submitBtn').disabled = true;
 
                 // Start polling for job status
                 statusPollInterval = setInterval(pollJobStatus, 2000);
 
-                alert(`Job submitted! Job ID: ${data.job_id.substring(0, 8)}...\nView progress in the Jobs page.`);
+                // Show job details link
+                const jobLink = document.createElement('div');
+                jobLink.style.cssText = 'margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border-radius: 8px; text-align: center;';
+                jobLink.innerHTML = `
+                    <p style="margin-bottom: 10px; font-weight: 600;">✅ Job Started Successfully!</p>
+                    <a href="/jobs/${data.job_id}/" style="color: white; text-decoration: underline; font-weight: 600; font-size: 1.1em;">
+                        📊 View Job Details & Live Statistics →
+                    </a>
+                    <p style="margin-top: 8px; font-size: 0.9em; opacity: 0.9;">Job ID: ${data.job_id.substring(0, 8)}...</p>
+                `;
+                document.getElementById('loading').appendChild(jobLink);
 
             } catch (error) {
                 alert('Error: ' + error.message);
@@ -731,38 +671,6 @@
                 document.getElementById('currentUrl').textContent = job.status;
                 document.getElementById('currentStep').textContent = `${job.progress}% complete`;
                 document.getElementById('stepStatus').textContent = job.status;
-
-                // Update basic stats
-                document.getElementById('statTotal').textContent = job.total_items;
-                document.getElementById('statProcessed').textContent = job.processed_items;
-
-                // Calculate detailed stats from results_data
-                if (job.results_data && job.results_data.length > 0) {
-                    let adsSuccess = 0, adsNotFound = 0;
-                    let appAdsSuccess = 0, appAdsNotFound = 0;
-
-                    job.results_data.forEach(result => {
-                        // ads.txt stats
-                        if (result.ads_txt) {
-                            if (result.ads_txt.status_code === 200) adsSuccess++;
-                            else if (result.ads_txt.status_code === 404) adsNotFound++;
-                        }
-
-                        // app-ads.txt stats
-                        if (result.app_ads_txt) {
-                            if (result.app_ads_txt.status_code === 200) appAdsSuccess++;
-                            else if (result.app_ads_txt.status_code === 404) appAdsNotFound++;
-                        }
-                    });
-
-                    document.getElementById('statAdsSuccess').textContent = adsSuccess;
-                    document.getElementById('statAdsNotFound').textContent = adsNotFound;
-                    document.getElementById('statAppAdsSuccess').textContent = appAdsSuccess;
-                    document.getElementById('statAppAdsNotFound').textContent = appAdsNotFound;
-
-                    // Show stats section
-                    document.getElementById('statsSection').style.display = 'block';
-                }
 
                 // Check if job is complete
                 if (job.status === 'completed' || job.status === 'failed') {
