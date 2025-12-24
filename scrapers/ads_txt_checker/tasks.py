@@ -53,22 +53,18 @@ def process_ads_txt_job(job_id, urls, start_index=0):
                 print(f"Job {job_id} was stopped/failed, exiting task")
                 return {'success': False, 'error': f'Job was {job.status}'}
             
-            if job.status == 'paused':
+            # If job is paused, exit the task - it will be restarted on resume
+            if job.status == 'paused' or job.status == 'auto_paused':
+                print(f"Job {job_id} is paused at {index}/{len(urls)}, exiting task")
                 JobEvent.objects.create(
                     job=job,
                     event_type='paused',
-                    message=f'Job paused at {index}/{len(urls)} URLs'
+                    message=f'Job paused at {index}/{len(urls)} URLs (task will resume from this point)'
                 )
-                # Wait for resume
-                while job.status == 'paused':
-                    time.sleep(2)
-                    job.refresh_from_db()
-                
-                JobEvent.objects.create(
-                    job=job,
-                    event_type='resumed',
-                    message=f'Job resumed at {index}/{len(urls)} URLs'
-                )
+                # Save current progress and exit - resume will restart from processed_items
+                job.processed_items = index
+                job.save()
+                return {'success': True, 'paused': True, 'processed': index}
             
             # Process URL
             try:
