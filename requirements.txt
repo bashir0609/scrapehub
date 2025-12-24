@@ -1,8 +1,8 @@
-Django==6.0
+Django==5.2
 requests==2.31.0
 django-cors-headers==4.3.1
 psycopg2-binary==2.9.10
-django-q2==1.7.4  # Task backend for Django 6.0
+django-q2==1.7.4
 
 # Web Scraping
 beautifulsoup4>=4.12.0
