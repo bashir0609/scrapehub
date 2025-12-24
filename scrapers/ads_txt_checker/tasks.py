@@ -1,11 +1,9 @@
-from django.tasks import task
 from scrapers.jobs.models import Job, JobEvent
 from scrapers.ads_txt_checker.views import detect_homepage_url, check_file
 from django.utils import timezone
 import time
 
 
-@task()
 def process_ads_txt_job(job_id, urls, start_index=0):
     """
     Celery task to process ads.txt checking job in the background.
