@@ -31,8 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.tasks',  # Django 6.0 task framework
-    'django_q',  # Django-Q2 as task backend
+    'django_q',  # Django-Q2 for background tasks
     'corsheaders',
     'scrapers.universal_api',
     'scrapers.company_social_finder',
