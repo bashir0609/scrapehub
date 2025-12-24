@@ -92,11 +92,11 @@ def resume_job(request, job_id):
         job.save()
         
         if job.input_data and 'urls' in job.input_data:
-            # Re-trigger the Django-Q2 background task from the last processed item
+            # Re-trigger the Django 6.0 native background task from the last processed item
             from scrapers.ads_txt_checker.tasks import process_ads_txt_job
-            from django_q.tasks import async_task
+            from django.tasks import enqueue
             current_index = job.processed_items
-            async_task(process_ads_txt_job, str(job.job_id), job.input_data['urls'], start_index=current_index)
+            enqueue(process_ads_txt_job, str(job.job_id), job.input_data['urls'], start_index=current_index)
             
             message = f'Job manually resumed by user (Worker restarted at item {current_index})'
         else:

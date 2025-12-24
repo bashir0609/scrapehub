@@ -1,5 +1,5 @@
-# Use Python 3.11 slim image
-FROM python:3.11-slim
+# Use Python 3.12 slim image (required for Django 6.0)
+FROM python:3.12-slim
 
 # Set working directory
 WORKDIR /app
@@ -11,11 +11,11 @@ ENV PYTHONUNBUFFERED=1
 # Install system dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-        gcc \
-        postgresql-client \
-        wget \
-        gnupg \
-        ca-certificates \
+    gcc \
+    postgresql-client \
+    wget \
+    gnupg \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -40,6 +40,5 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8000
 
-# Default command (can be overridden in docker-compose)
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
+# Command for production (migrations + worker + gunicorn)
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runworker & exec gunicorn scrapehub.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]

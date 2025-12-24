@@ -196,9 +196,9 @@ def submit_job(request):
             input_data={'urls': urls}  # Save inputs for resumption
         )
         
-        # Submit to Django-Q2 background task queue
-        from django_q.tasks import async_task
-        task_id = async_task(process_ads_txt_job, str(job.job_id), urls)
+        # Submit to Django 6.0 native background task queue
+        from django.tasks import enqueue
+        task_id = enqueue(process_ads_txt_job, str(job.job_id), urls)
         
         return JsonResponse({
             'success': True,
