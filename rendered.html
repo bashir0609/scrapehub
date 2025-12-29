@@ -590,19 +590,13 @@
 
                 <div style="display: flex; flex-direction: column; gap: 12px;">
 
-                    <button onclick="pauseJob()" class="btn btn-pause" style="width: 100%;" {% if job.status != 'running' %}disabled{% endif %}>
+                    <button onclick="pauseJob()" class="btn btn-pause" style="width: 100%;">
                         <span>⏸</span>
                         <span>Pause Job</span>
                     </button>
 
-                    <button onclick="resumeJob()" class="btn btn-resume"
-                        style="width: 100%;background-color: #10b981; color: white; padding: 10px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
-                        {% if job.status != 'paused' and job.status != 'auto_paused' %}disabled{% endif %}>
-                        <span>▶</span>
-                        <span>Resume Job</span>
-                    </button>
 
-                    <button onclick="stopJob()" class="btn btn-stop" style="width: 100%;" {% if job.status == 'completed' or job.status == 'failed' %}disabled{% endif %}>
+                    <button onclick="stopJob()" class="btn btn-stop" style="width: 100%;">
                         <span>⏹</span>
                         <span>Stop Job</span>
                     </button>
@@ -769,9 +763,11 @@
         <h2 class="card-title">Event Timeline</h2>
         <div class="timeline" id="eventTimeline">
             {% for event in events %}
-            <div class="timeline-item" data-event-index="{{ forloop.counter }}" {% if forloop.counter > 10 %}style="display: none;"{% endif %}>
+            <div class="timeline-item" data-event-index="{{ forloop.counter }}" {% if forloop.counter> 10
+                %}style="display: none;"{% endif %}>
                 <div class="timeline-icon timeline-icon-{{ event.event_type }}">
-                    {% if event.event_type == 'started' or event.event_type == 'resumed' or event.event_type == 'auto_resumed' %}▶
+                    {% if event.event_type == 'started' or event.event_type == 'resumed' or event.event_type ==
+                    'auto_resumed' %}▶
                     {% elif event.event_type == 'paused' or event.event_type == 'auto_paused' %}⏸
                     {% elif event.event_type == 'completed' %}✓
                     {% elif event.event_type == 'failed' %}✕

@@ -134,12 +134,14 @@ def process_ads_txt_job(job_id, urls, start_index=0):
             job.processed_items = index + 1
             
             # Save results every 10 items for live stats
-            if (index + 1) % 10 == 0:
+            # Save results every 50 items to reduce DB load for large jobs
+            if (index + 1) % 50 == 0:
                 job.results_data = results
                 job.save()
                 
-                # Create progress event only every 100 items to avoid timeline clutter
-                if (index + 1) % 100 == 0:
+                # Create progress event every 10% or every 100 items, whichever is larger
+                progress_interval = max(100, len(urls) // 10)
+                if (index + 1) % progress_interval == 0:
                     JobEvent.objects.create(
                         job=job,
                         event_type='progress',

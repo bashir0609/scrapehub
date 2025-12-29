@@ -20,8 +20,8 @@ def detect_homepage_url(url_input):
     Detect the actual homepage URL by following redirects and handling SSL/www variations.
     Returns the final homepage URL after all redirects.
     """
-    # Clean the input URL
-    url = url_input.strip()
+    # Clean the input URL - remove whitespace and quotes
+    url = url_input.strip().strip('"\'')
     if not url:
         return None, 'Empty URL'
     
