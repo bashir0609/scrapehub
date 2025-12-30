@@ -20,6 +20,25 @@ services:
       - db
     restart: unless-stopped
 
+  worker:
+    build: .
+    command: python manage.py qcluster
+    volumes:
+      - static_volume:/app/staticfiles
+    environment:
+      - DEBUG=0
+      - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
+      - POSTGRES_DB=scrapehub
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-this-in-production}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
   db:
     image: postgres:15-alpine
     volumes:
@@ -28,6 +47,8 @@ services:
       - POSTGRES_DB=scrapehub
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-this-in-production}
+    ports:
+      - "5433:5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]

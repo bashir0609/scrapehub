@@ -1,7 +1,11 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
-from .models import Job, JobEvent
+from django.core.paginator import Paginator
+from django.db.models import Q
+from .models import Job, JobEvent, JobResult
+import json
+import csv
 
 
 def jobs_list(request):
@@ -49,38 +53,24 @@ def job_status_api(request, job_id):
     """API endpoint for real-time job status updates"""
     job = get_object_or_404(Job, job_id=job_id)
     
-    # Calculate stats (only count processed items to avoid counting stale data)
-    results = job.results_data or []
-    # Only count stats for actually processed items
-    results_to_count = results[:job.processed_items] if results else []
+    # Calculate stats from JobResult model
+    # We can use aggregate queries for better performance, but strict looping matches previous logic
+    # optimizing using DB filtering is better
     
-    ads_success = 0
-    ads_error = 0
-    app_success = 0
-    app_error = 0
+    ads_success = job.results.filter(ads_txt_result__status_code=200).count()
+    # Errors include: status != 200 OR explicit error field set (e.g. homepage detection failed)
+    ads_error = job.results.filter(Q(ads_txt_result__status_code__ne=200) | Q(error__isnull=False)).count()
     
-    for r in results_to_count:
-        # Check ads.txt status
-        if r.get('ads_txt'):
-             if r['ads_txt'].get('status_code') == 200:
-                 ads_success += 1
-             else:
-                 ads_error += 1
-        
-        # Check app-ads.txt status
-        if r.get('app_ads_txt'):
-             if r['app_ads_txt'].get('status_code') == 200:
-                 app_success += 1
-             else:
-                 app_error += 1
+    app_success = job.results.filter(app_ads_txt_result__status_code=200).count()
+    app_error = job.results.exclude(app_ads_txt_result__status_code=200).count()
 
     return JsonResponse({
-        'job_id': job.job_id, # Keep job_id for client-side identification
+        'job_id': job.job_id,
         'status': job.status,
         'progress': job.progress_percentage,
         'processed_items': job.processed_items,
         'total_items': job.total_items,
-        'updated_at': job.updated_at.isoformat(), # Keep updated_at for client-side freshness check
+        'updated_at': job.updated_at.isoformat(),
         'stats': {
             'ads_success': ads_success,
             'ads_error': ads_error,
@@ -168,13 +158,14 @@ def stop_job(request, job_id):
 def download_job_results(request, job_id):
     """
     Download job results as CSV or JSON.
-    Uses StreamingHttpResponse for CSV to handle large datasets efficiently.
+    Uses StreamingHttpResponse to handle large datasets efficiently.
+    Streams directly from the database using iterator() on JobResult query.
     """
-    import csv
-    from django.http import StreamingHttpResponse, HttpResponse
-    
     job = get_object_or_404(Job, job_id=job_id)
     fmt = request.GET.get('format', 'json')
+    
+    # Queryset for results
+    results_qs = job.results.all().iterator(chunk_size=1000)
     
     if fmt == 'csv':
         response = HttpResponse(
@@ -182,98 +173,127 @@ def download_job_results(request, job_id):
             headers={'Content-Disposition': f'attachment; filename="job_{job.job_id}_results.csv"'},
         )
         
-        # Get results data
-        results = job.results_data or []
-        
-        # Write CSV
         writer = csv.writer(response)
-        
         # Write header
         writer.writerow(['Original URL', 'Homepage URL', 'Detection Status', 'Ads.txt Status', 'App-ads.txt Status', 'Error'])
         
         # Write rows
-        for r in results:
+        for r in results_qs:
             writer.writerow([
-                r.get('original_url', ''),
-                r.get('homepage_url', ''),
-                r.get('homepage_detection', ''),
-                r.get('ads_txt', {}).get('result_text', '') if isinstance(r.get('ads_txt'), dict) else '',
-                r.get('app_ads_txt', {}).get('result_text', '') if isinstance(r.get('app_ads_txt'), dict) else '',
-                r.get('error', '')
+                r.original_url or '',
+                r.homepage_url or '',
+                r.homepage_detection or '',
+                r.ads_txt_result.get('result_text', '') if r.ads_txt_result else '',
+                r.app_ads_txt_result.get('result_text', '') if r.app_ads_txt_result else '',
+                r.error or ''
             ])
             
         return response
         
     else:
-        # Default to JSON
-        response = HttpResponse(
-            content_type='application/json',
-            headers={'Content-Disposition': f'attachment; filename="job_{job.job_id}_results.json"'},
+        # For JSON streaming, we need to build a generator that yields parts of the JSON array
+        def json_stream_generator():
+            yield '['
+            first = True
+            for r in results_qs:
+                if not first:
+                    yield ','
+                else:
+                    first = False
+                
+                data = {
+                    'original_url': r.original_url,
+                    'homepage_url': r.homepage_url,
+                    'homepage_detection': r.homepage_detection,
+                    'ads_txt': r.ads_txt_result,
+                    'app_ads_txt': r.app_ads_txt_result,
+                    'error': r.error
+                }
+                yield json.dumps(data)
+            yield ']'
+
+        response = StreamingHttpResponse(
+            json_stream_generator(),
+            content_type='application/json'
         )
-        response.write(json.dumps(job.results_data or [], indent=2))
+        response['Content-Disposition'] = f'attachment; filename="job_{job.job_id}_results.json"'
         return response
 
 
 def job_results_api(request, job_id):
     """
     API endpoint for DataTables server-side processing.
-    Handles pagination, searching, and sorting for job results.
+    Handles pagination, searching, and sorting using the JobResult model directly.
     """
     job = get_object_or_404(Job, job_id=job_id)
-    all_results = job.results_data or []
     
-    # Only show results that have been processed (avoid showing stale data)
-    results = all_results[:job.processed_items] if all_results else []
-    
-    # Reverse to show newest records first
-    results = list(reversed(results))
+    # Base queryset
+    results = job.results.all()
     
     # Parameters from DataTables
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
-    search_value = request.GET.get('search[value]', '').lower()
+    search_value = request.GET.get('search[value]', '').strip()
     
-    # Filtering
+    # Text Search (Filtering)
     if search_value:
-        filtered_results = []
-        for r in results:
-            # Search in all relevant string fields
-            text = f"{r.get('original_url', '')} {r.get('homepage_url', '')} {r.get('error', '')}"
-            if search_value in text.lower():
-                filtered_results.append(r)
-        results = filtered_results
+        results = results.filter(
+            Q(original_url__icontains=search_value) |
+            Q(homepage_url__icontains=search_value) |
+            Q(error__icontains=search_value)
+        )
     
-    # Sorting (basic implementation for key columns)
+    # Sorting
     order_column_idx = int(request.GET.get('order[0][column]', 0))
     order_dir = request.GET.get('order[0][dir]', 'asc')
     
-    # Map column index to key (matches table creation order)
+    # Map column index to field names
     # 0: expand button, 1: Original URL, 2: Homepage, 3: Ads.txt, 4: App-ads.txt
-    column_keys = [None, 'original_url', 'homepage_url', 'ads_txt', 'app_ads_txt']
-    if 0 < order_column_idx < len(column_keys):
-        key = column_keys[order_column_idx]
-        if key:  # Skip sorting if column is None (expand button)
-            reverse = (order_dir == 'desc')
-            
-            def get_sort_value(item):
-                val = item.get(key, '')
-                if isinstance(val, dict): # For ads_txt/app_ads_txt result/status objects
-                    return val.get('result_text', '') 
-                return str(val).lower()
-                
-            results.sort(key=get_sort_value, reverse=reverse)
-
-    # Pagination (use processed_items as the true total, not stale data)
-    total_records = job.processed_items
-    filtered_records = len(results)
+    column_map = {
+        1: 'original_url',
+        2: 'homepage_url',
+        # Complex JSON fields or computed fields can't be easily sorted by DB
+        # We'll stick to basic fields for efficient DB sorting, 
+        # or defaults to insertion order (id)
+    }
     
-    # Slice the results
-    page_data = results[start : start + length]
+    order_field = column_map.get(order_column_idx)
+    if order_field:
+        if order_dir == 'desc':
+            order_field = f'-{order_field}'
+        results = results.order_by(order_field)
+    else:
+        # Default sort by newest first (descending ID)
+        results = results.order_by('-id')
+
+    # Pagination
+    paginator = Paginator(results, length)
+    # Calculate page number (1-based) from start offset
+    page_number = (start // length) + 1
+    
+    try:
+        page_obj = paginator.page(page_number)
+        data_objects = page_obj.object_list
+    except:
+        data_objects = []
+    
+    # Serialize data for DataTables
+    data = []
+    for r in data_objects:
+        data.append({
+            'original_url': r.original_url,
+            'homepage_url': r.homepage_url,
+            'homepage_detection': r.homepage_detection,
+            'ads_txt': r.ads_txt_result,
+            'app_ads_txt': r.app_ads_txt_result,
+            'error': r.error
+        })
     
     return JsonResponse({
         "draw": draw,
-        "recordsTotal": total_records,
-        "recordsFiltered": filtered_records,
-        "data": page_data
+        "recordsTotal": job.processed_items, # Approx total
+        "recordsFiltered": paginator.count,   # Actual filtered count
+        "data": data
     })
+

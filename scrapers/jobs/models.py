@@ -86,3 +86,27 @@ class JobEvent(models.Model):
     
     def __str__(self):
         return f"{self.job.job_id[:8]} - {self.get_event_type_display()}"
+
+
+class JobResult(models.Model):
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='results')
+    original_url = models.URLField(max_length=2000)
+    homepage_url = models.URLField(max_length=2000, null=True, blank=True)
+    homepage_detection = models.CharField(max_length=50, null=True, blank=True)
+    
+    # Store detailed results as JSON
+    ads_txt_result = models.JSONField(null=True, blank=True)
+    app_ads_txt_result = models.JSONField(null=True, blank=True)
+    
+    error = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['id']
+        indexes = [
+            models.Index(fields=['job']),
+            models.Index(fields=['original_url']),
+        ]
+
+    def __str__(self):
+        return f"{self.job.job_id[:8]} - {self.original_url}"
