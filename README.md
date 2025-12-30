@@ -26,6 +26,7 @@ ScrapeHub is a comprehensive web scraping platform that provides a unified inter
 - 🔍 **Company Social Finder** - Extract company information and social media profiles
 - 🛒 **E-commerce Scraper** - Generic scraper that works with any e-commerce website
 - ⚡ **RapidAPI Integration** - Access thousands of APIs through RapidAPI marketplace (Coming Soon)
+- 📝 **Ads.txt Checker** - Bulk validate ads.txt and app-ads.txt files
 - 📱 **Social Media Scraper** - Extract data from social platforms (Coming Soon)
 - 🎨 **Modern UI** - Beautiful, responsive web interface
 - 🐳 **Docker Ready** - Easy deployment with Docker Compose
@@ -48,8 +49,21 @@ ScrapeHub is a comprehensive web scraping platform that provides a unified inter
 - 📄 **Pagination** - Automatic pagination support
 - 💾 **Export** - CSV/JSON export functionality
 - 🔎 **Dynamic Fields** - Automatic field extraction from API responses
+- 🔎 **Dynamic Fields** - Automatic field extraction from API responses
 
-### ✅ Company Social Finder (Core Features Complete)
+### ✅ Ads.txt Checker (Fully Implemented)
+
+A powerful tool for bulk validation of **ads.txt** and **app-ads.txt** files.
+
+- 🔍 **Bulk Validation** - Validate thousands of domains at once
+- 📂 **Auto-Discovery** - Automatically finds homepage and ads.txt location
+- 📝 **Content Analysis** - detailed analysis of ads.txt content
+- 📊 **Status Codes** - Checks for 200 OK, 403, 404, etc.
+- 🚀 **Async Processing** - Fast parallel processing using Django-Q
+- 📋 **Live Results** - Real-time progress tracking
+- 💾 **Export** - Export validation results as CSV/JSON
+
+**URL**: `/ads-txt-checker/`
 
 Formerly known as "Web Scraper", this tool focuses on finding company information and social media profiles.
 
@@ -98,17 +112,20 @@ A **generic e-commerce scraper** that works with **ANY e-commerce website** - no
 ### Using Docker (Recommended)
 
 1. **Clone the repository**:
+
 ```bash
 git clone <repository-url>
 cd "API Scraper"
 ```
 
 2. **Start the application**:
+
 ```bash
 docker-compose up --build
 ```
 
 3. **Open your browser**:
+
 ```
 http://localhost:8001
 ```
@@ -118,35 +135,42 @@ http://localhost:8001
 ### Manual Installation
 
 1. **Create virtual environment**:
+
 ```bash
 python -m venv venv
 ```
 
 2. **Activate virtual environment**:
+
    - **Windows**: `venv\Scripts\activate`
    - **Linux/Mac**: `source venv/bin/activate`
 
 3. **Install dependencies**:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 4. **Run migrations**:
+
 ```bash
 python manage.py migrate
 ```
 
 5. **Create superuser** (optional):
+
 ```bash
 python manage.py createsuperuser
 ```
 
 6. **Run development server**:
+
 ```bash
 python manage.py runserver
 ```
 
 7. **Open browser**:
+
 ```
 http://127.0.0.1:8000
 ```
@@ -205,6 +229,7 @@ scrapehub/                          # Django project folder
    - **Universal API Client** - `/` (home page)
    - **Company Social Finder** - `/company-social-finder/`
    - **E-commerce Scraper** - `/ecommerce-scraper/`
+   - **Ads.txt Checker** - `/ads-txt-checker/`
 3. Configure your scraping parameters
 4. Click "Scrape" and view results
 5. Export data as CSV or JSON
@@ -216,27 +241,31 @@ scrapehub/                          # Django project folder
 **Endpoint**: `POST /api/scrape/`
 
 **Request**:
+
 ```json
 {
-    "url": "https://example.com/api/endpoint",
-    "method": "POST",
-    "data": {
-        "current": 1,
-        "size": 10
-    },
-    "headers": {
-        "Content-Type": "application/json"
-    }
+  "url": "https://example.com/api/endpoint",
+  "method": "POST",
+  "data": {
+    "current": 1,
+    "size": 10
+  },
+  "headers": {
+    "Content-Type": "application/json"
+  }
 }
 ```
 
 **Response**:
+
 ```json
 {
-    "success": true,
-    "status_code": 200,
-    "data": { /* API response */ },
-    "request_id": 1
+  "success": true,
+  "status_code": 200,
+  "data": {
+    /* API response */
+  },
+  "request_id": 1
 }
 ```
 
@@ -257,6 +286,22 @@ scrapehub/                          # Django project folder
 **Price Tracking**: `POST /api/ecommerce-price-track/`
 
 **Price History**: `GET /api/ecommerce-price-history/?product_id={id}`
+
+#### Ads.txt Checker
+
+**Submit Job**: `POST /ads-txt-checker/api/submit-job/`
+
+**Request**:
+
+```json
+{
+  "urls": ["example.com", "nytimes.com", "cnn.com"]
+}
+```
+
+**Check Status**: `GET /jobs/api/status/{job_id}/`
+
+**Get Results**: `GET /jobs/api/results/{job_id}/`
 
 ---
 
@@ -300,6 +345,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ```
 
 **Environment Variables** (set in `.env` or docker-compose):
+
 - `SECRET_KEY`: Django secret key
 - `POSTGRES_PASSWORD`: Database password
 - `DEBUG`: Set to `False` in production
@@ -311,6 +357,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ### Database
 
 The application uses:
+
 - **SQLite** for local development (default)
 - **PostgreSQL** when running in Docker or when `POSTGRES_DB` environment variable is set
 
@@ -368,6 +415,7 @@ See [SCRAPER_IMPLEMENTATION_PLAN.md](./SCRAPER_IMPLEMENTATION_PLAN.md) for detai
 - ✅ Universal API Client - Fully implemented
 - ✅ Company Social Finder - Core features complete
 - ✅ E-commerce Scraper - Fully implemented (generic)
+- ✅ Ads.txt Checker - Fully implemented
 - 🚧 Social Scraper - Planned
 - 🚧 RapidAPI Scraper - Planned
 
@@ -424,6 +472,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For issues, questions, or contributions:
+
 - Open an issue on GitHub
 - Check the [Implementation Plan](./SCRAPER_IMPLEMENTATION_PLAN.md) for detailed documentation
 
