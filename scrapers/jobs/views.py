@@ -177,18 +177,39 @@ def download_job_results(request, job_id):
         )
         
         writer = csv.writer(response)
-        # Write header
-        writer.writerow(['Original URL', 'Homepage URL', 'Detection Status', 'Ads.txt Status', 'App-ads.txt Status', 'Ads.txt Content', 'App-ads.txt Content', 'Error'])
+        # Write header with all detailed fields
+        writer.writerow([
+            'Original URL',
+            'Homepage URL',
+            'Homepage Detection',
+            'Ads.txt URL',
+            'Ads.txt Status Code',
+            'Ads.txt Has HTML',
+            'Ads.txt Response Time (ms)',
+            'Ads.txt Content',
+            'App-ads.txt URL',
+            'App-ads.txt Status Code',
+            'App-ads.txt Has HTML',
+            'App-ads.txt Response Time (ms)',
+            'App-ads.txt Content',
+            'Error'
+        ])
         
-        # Write rows
+        # Write rows with all detailed fields
         for r in results_qs:
             writer.writerow([
                 r.original_url or '',
                 r.homepage_url or '',
                 r.homepage_detection or '',
-                r.ads_txt_result.get('result_text', '') if r.ads_txt_result else '',
-                r.app_ads_txt_result.get('result_text', '') if r.app_ads_txt_result else '',
+                r.ads_txt_result.get('url', '') if r.ads_txt_result else '',
+                r.ads_txt_result.get('status_code', '') if r.ads_txt_result else '',
+                r.ads_txt_result.get('has_html', '') if r.ads_txt_result else '',
+                r.ads_txt_result.get('time_ms', '') if r.ads_txt_result else '',
                 r.ads_txt_result.get('content', '') if r.ads_txt_result else '',
+                r.app_ads_txt_result.get('url', '') if r.app_ads_txt_result else '',
+                r.app_ads_txt_result.get('status_code', '') if r.app_ads_txt_result else '',
+                r.app_ads_txt_result.get('has_html', '') if r.app_ads_txt_result else '',
+                r.app_ads_txt_result.get('time_ms', '') if r.app_ads_txt_result else '',
                 r.app_ads_txt_result.get('content', '') if r.app_ads_txt_result else '',
                 r.error or ''
             ])
