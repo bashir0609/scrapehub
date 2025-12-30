@@ -6,9 +6,13 @@ from django.conf import settings
 import json
 import time
 import requests
+import urllib3
 import re
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
+
+# Suppress InsecureRequestWarning since we intentionally use verify=False for scraping
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def normalize_url(url):

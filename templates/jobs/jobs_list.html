@@ -301,12 +301,13 @@
     </div>
 
     <script>
-        // Auto-refresh every 3 seconds for running jobs
-        {% if running_count > 0 %}
-        setTimeout(() => {
-            location.reload();
-        }, 3000);
-        {% endif %}
+        // Auto-refresh every 30 seconds for running jobs
+        const runningCount = parseInt("{{ running_count|default:0 }}");
+        if (runningCount > 0) {
+            setTimeout(() => {
+                location.reload();
+            }, 30000);
+        }
     </script>
 </body>
 

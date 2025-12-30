@@ -1,12 +1,51 @@
 import requests
+import urllib3
 import json
 import time
+from functools import wraps
 from bs4 import BeautifulSoup
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from urllib.parse import urlparse, urlunparse
+
+# Suppress InsecureRequestWarning since we intentionally use verify=False for scraping
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+
+def retry_with_backoff(max_retries=3, initial_delay=1, backoff_factor=2, exceptions=(requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
+    """
+    Retry decorator with exponential backoff.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds
+        backoff_factor: Multiplier for delay on each retry
+        exceptions: Tuple of exceptions to catch and retry
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            delay = initial_delay
+            last_exception = None
+            
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exception = e
+                    if attempt < max_retries:
+                        print(f"Attempt {attempt + 1} failed: {str(e)}. Retrying in {delay}s...")
+                        time.sleep(delay)
+                        delay *= backoff_factor
+                    else:
+                        print(f"All {max_retries + 1} attempts failed for {func.__name__}")
+            
+            # If all retries failed, raise the last exception
+            raise last_exception
+        return wrapper
+    return decorator
 
 def index(request):
     """Render the ads.txt checker interface"""
@@ -28,16 +67,36 @@ def detect_homepage_url(url_input):
     # Add protocol if missing
     if not url.startswith(('http://', 'https://')):
         url = 'https://' + url
+
+@retry_with_backoff(max_retries=2, initial_delay=1)
+def _fetch_homepage(url):
+    """Helper function to fetch homepage with retries"""
+    response = requests.get(
+        url, 
+        timeout=20,  # Increased from 10
+        allow_redirects=True,
+        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
+        verify=False
+    )
+    return response
+
+def detect_homepage_url(url_input):
+    """
+    Detect the actual homepage URL by following redirects and handling SSL/www variations.
+    Returns the final homepage URL after all redirects.
+    """
+    # Clean the input URL - remove whitespace and quotes
+    url = url_input.strip().strip('"\'')
+    if not url:
+        return None, 'Empty URL'
+    
+    # Add protocol if missing
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
     
     # Try to detect homepage by following redirects
     try:
-        response = requests.get(
-            url, 
-            timeout=10, 
-            allow_redirects=True,
-            headers={'User-Agent': 'Mozilla/5.0 (compatible; ScrapeHub/1.0)'},
-            verify=False  # Handle SSL issues
-        )
+        response = _fetch_homepage(url)
         
         # Get the final URL after all redirects
         final_url = response.url
@@ -52,12 +111,7 @@ def detect_homepage_url(url_input):
         # If HTTPS fails due to SSL, try HTTP
         try:
             http_url = url.replace('https://', 'http://')
-            response = requests.get(
-                http_url,
-                timeout=10,
-                allow_redirects=True,
-                headers={'User-Agent': 'Mozilla/5.0 (compatible; ScrapeHub/1.0)'}
-            )
+            response = _fetch_homepage(http_url)
             parsed = urlparse(response.url)
             homepage_url = f"{parsed.scheme}://{parsed.netloc}/"
             return homepage_url, 'OK (HTTP fallback)'
@@ -69,6 +123,18 @@ def detect_homepage_url(url_input):
         return None, 'Connection Error'
     except Exception as e:
         return None, f'Error: {str(e)}'
+
+
+@retry_with_backoff(max_retries=2, initial_delay=0.5)
+def _fetch_file(url):
+    """Helper function to fetch file with retries"""
+    response = requests.get(
+        url, 
+        timeout=20,  # Increased from 10
+        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
+        verify=False
+    )
+    return response
 
 def check_file(url):
     """Helper to check a specific URL for ads.txt content"""
@@ -83,12 +149,7 @@ def check_file(url):
     
     start_time = time.time()
     try:
-        response = requests.get(
-            url, 
-            timeout=10, 
-            headers={'User-Agent': 'Mozilla/5.0 (compatible; ScrapeHub/1.0)'},
-            verify=False  # Handle SSL issues
-        )
+        response = _fetch_file(url)
         result['time_ms'] = int((time.time() - start_time) * 1000)
         result['status_code'] = response.status_code
         

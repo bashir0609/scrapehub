@@ -10,7 +10,11 @@ from decimal import Decimal
 from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 import requests
+import urllib3
 from django.conf import settings
+
+# Suppress InsecureRequestWarning since we intentionally use verify=False for scraping
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 try:
     from fake_useragent import UserAgent

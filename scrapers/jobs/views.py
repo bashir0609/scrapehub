@@ -225,6 +225,9 @@ def job_results_api(request, job_id):
     # Only show results that have been processed (avoid showing stale data)
     results = all_results[:job.processed_items] if all_results else []
     
+    # Reverse to show newest records first
+    results = list(reversed(results))
+    
     # Parameters from DataTables
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -246,19 +249,20 @@ def job_results_api(request, job_id):
     order_dir = request.GET.get('order[0][dir]', 'asc')
     
     # Map column index to key (matches table creation order)
-    # 0: Original URL, 1: Homepage, 2: Ads.txt, 3: App-ads.txt
-    column_keys = ['original_url', 'homepage_url', 'ads_txt', 'app_ads_txt']
-    if 0 <= order_column_idx < len(column_keys):
+    # 0: expand button, 1: Original URL, 2: Homepage, 3: Ads.txt, 4: App-ads.txt
+    column_keys = [None, 'original_url', 'homepage_url', 'ads_txt', 'app_ads_txt']
+    if 0 < order_column_idx < len(column_keys):
         key = column_keys[order_column_idx]
-        reverse = (order_dir == 'desc')
-        
-        def get_sort_value(item):
-            val = item.get(key, '')
-            if isinstance(val, dict): # For ads_txt/app_ads_txt result/status objects
-                return val.get('result_text', '') 
-            return str(val).lower()
+        if key:  # Skip sorting if column is None (expand button)
+            reverse = (order_dir == 'desc')
             
-        results.sort(key=get_sort_value, reverse=reverse)
+            def get_sort_value(item):
+                val = item.get(key, '')
+                if isinstance(val, dict): # For ads_txt/app_ads_txt result/status objects
+                    return val.get('result_text', '') 
+                return str(val).lower()
+                
+            results.sort(key=get_sort_value, reverse=reverse)
 
     # Pagination (use processed_items as the true total, not stale data)
     total_records = job.processed_items

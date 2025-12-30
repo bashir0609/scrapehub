@@ -95,39 +95,37 @@ def process_ads_txt_job(job_id, urls, start_index=0):
                     'app_ads_txt': app_ads_result
                 })
                 
+                # Rate limiting: small delay to avoid overwhelming servers
+                time.sleep(0.5)
+                
             except Exception as url_error:
+                # Log the error in results
+                results.append({
+                    'original_url': url_input,
+                    'error': str(url_error)
+                })
+                
                 # Auto-pause on repeated errors
                 job.retry_count += 1
                 if job.retry_count >= 3:
                     job.status = 'auto_paused'
                     job.auto_pause_reason = f'Server error: {str(url_error)}'
+                    job.processed_items = index  # Save current position
+                    job.results_data = results
                     job.save()
                     
                     JobEvent.objects.create(
                         job=job,
                         event_type='auto_paused',
-                        message=f'Auto-paused after {job.retry_count} errors: {str(url_error)}'
+                        message=f'Auto-paused after {job.retry_count} errors at item {index + 1}/{len(urls)}: {str(url_error)}'
                     )
                     
-                    # Wait for manual resume
-                    while job.status == 'auto_paused':
-                        time.sleep(5)
-                        job.refresh_from_db()
-                    
-                    job.retry_count = 0
-                    JobEvent.objects.create(
-                        job=job,
-                        event_type='auto_resumed',
-                        message='Job auto-resumed after server recovery'
-                    )
+                    # EXIT THE TASK - resume will restart from processed_items
+                    print(f"Job {job_id} auto-paused at {index}/{len(urls)}, exiting task")
+                    return {'success': True, 'auto_paused': True, 'processed': index}
                 else:
                     # Retry with exponential backoff
                     time.sleep(2 ** job.retry_count)
-                
-                results.append({
-                    'original_url': url_input,
-                    'error': str(url_error)
-                })
             
             
             # Update progress and save results periodically

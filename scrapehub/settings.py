@@ -5,6 +5,14 @@ Django settings for scrapehub project.
 import os
 from pathlib import Path
 
+# Load environment variables from .env file (for local development)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv not installed (e.g., in Docker), skip loading .env file
+    pass
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
