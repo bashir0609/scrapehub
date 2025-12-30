@@ -109,6 +109,24 @@ def process_ads_txt_job(job_id, urls, start_index=0):
                 result_entry.app_ads_txt_result = app_ads_result
                 result_entry.save()
                 
+                # Update cached statistics incrementally using F() expressions for atomic updates
+                from django.db.models import F
+                
+                # Update ads.txt statistics
+                if ads_result and ads_result.get('status_code') == 200:
+                    job.stats_ads_success = F('stats_ads_success') + 1
+                else:
+                    job.stats_ads_error = F('stats_ads_error') + 1
+                
+                # Update app-ads.txt statistics
+                if app_ads_result and app_ads_result.get('status_code') == 200:
+                    job.stats_app_success = F('stats_app_success') + 1
+                else:
+                    job.stats_app_error = F('stats_app_error') + 1
+                
+                job.stats_last_updated = timezone.now()
+                job.save(update_fields=['stats_ads_success', 'stats_ads_error', 'stats_app_success', 'stats_app_error', 'stats_last_updated'])
+                
                 # Rate limiting: small delay to avoid overwhelming servers
                 time.sleep(0.5)
                 

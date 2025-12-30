@@ -501,8 +501,18 @@
                         table.ajax.reload(null, false); // Reload table data without resetting paging
                     }
 
-                    // Continue polling
-                    setTimeout(pollStatus, 60000);
+                    // Smart polling: adjust interval based on job status
+                    let nextPollInterval;
+                    if (data.status === 'running') {
+                        nextPollInterval = 5000; // 5 seconds for active jobs
+                    } else if (data.status === 'paused' || data.status === 'auto_paused') {
+                        nextPollInterval = 30000; // 30 seconds for paused jobs
+                    } else {
+                        // Stop polling for completed/failed jobs
+                        return;
+                    }
+                    
+                    setTimeout(pollStatus, nextPollInterval);
 
                 } catch (e) {
                     console.error("Polling error:", e);

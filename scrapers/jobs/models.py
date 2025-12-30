@@ -34,6 +34,13 @@ class Job(models.Model):
     auto_pause_reason = models.TextField(null=True, blank=True)
     input_data = models.JSONField(null=True, blank=True)  # Store original input (e.g. list of URLs)
     
+    # Cached statistics for performance optimization
+    stats_ads_success = models.IntegerField(default=0)
+    stats_ads_error = models.IntegerField(default=0)
+    stats_app_success = models.IntegerField(default=0)
+    stats_app_error = models.IntegerField(default=0)
+    stats_last_updated = models.DateTimeField(null=True, blank=True)
+    
     class Meta:
         ordering = ['-created_at']
         indexes = [
@@ -62,6 +69,32 @@ class Job(models.Model):
         count = old_jobs.count()
         old_jobs.delete()
         return count
+    
+    def update_statistics(self):
+        """
+        Recalculate and update cached statistics from JobResult records.
+        This is used for existing jobs or when statistics need to be refreshed.
+        """
+        from django.db.models import Q
+        
+        # Count successes and errors for ads.txt
+        self.stats_ads_success = self.results.filter(ads_txt_result__status_code=200).count()
+        self.stats_ads_error = self.results.filter(
+            Q(ads_txt_result__status_code__isnull=False) & ~Q(ads_txt_result__status_code=200)
+        ).count() + self.results.filter(error__isnull=False).count()
+        
+        # Count successes and errors for app-ads.txt
+        self.stats_app_success = self.results.filter(app_ads_txt_result__status_code=200).count()
+        self.stats_app_error = self.results.filter(
+            Q(app_ads_txt_result__status_code__isnull=False) & ~Q(app_ads_txt_result__status_code=200)
+        ).count()
+        
+        self.stats_last_updated = timezone.now()
+        self.save(update_fields=[
+            'stats_ads_success', 'stats_ads_error', 
+            'stats_app_success', 'stats_app_error', 
+            'stats_last_updated'
+        ])
 
 
 class JobEvent(models.Model):

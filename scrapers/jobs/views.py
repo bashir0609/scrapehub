@@ -53,16 +53,26 @@ def job_status_api(request, job_id):
     """API endpoint for real-time job status updates"""
     job = get_object_or_404(Job, job_id=job_id)
     
-    # Calculate stats from JobResult model
-    # We can use aggregate queries for better performance, but strict looping matches previous logic
-    # optimizing using DB filtering is better
+    # Use cached statistics for performance
+    # If statistics are stale (> 5 minutes old) or never calculated, recalculate
+    from django.utils import timezone
+    from datetime import timedelta
     
-    ads_success = job.results.filter(ads_txt_result__status_code=200).count()
-    # Errors include: status != 200 OR explicit error field set (e.g. homepage detection failed)
-    ads_error = job.results.filter(Q(ads_txt_result__status_code__ne=200) | Q(error__isnull=False)).count()
+    should_recalculate = (
+        job.stats_last_updated is None or 
+        (timezone.now() - job.stats_last_updated) > timedelta(minutes=5)
+    )
     
-    app_success = job.results.filter(app_ads_txt_result__status_code=200).count()
-    app_error = job.results.exclude(app_ads_txt_result__status_code=200).count()
+    if should_recalculate and job.status in ['completed', 'failed']:
+        # Only recalculate for completed/failed jobs if stats are stale
+        job.update_statistics()
+        job.refresh_from_db()
+    
+    # Use cached statistics (much faster than counting)
+    ads_success = job.stats_ads_success
+    ads_error = job.stats_ads_error
+    app_success = job.stats_app_success
+    app_error = job.stats_app_error
 
     return JsonResponse({
         'job_id': job.job_id,
