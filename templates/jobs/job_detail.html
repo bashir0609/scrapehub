@@ -56,7 +56,7 @@
 
                     <button onclick="resumeJob()" class="btn btn-resume"
                         style="width: 100%;background-color: #10b981; color: white; padding: 10px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;"
-                        {% if job.status != 'paused' and job.status != 'auto_paused' %}disabled{% endif %}>
+                        {% if job.status != 'paused' and job.status != 'auto_paused' and job.status != 'failed' and job.status != 'stopped' %}disabled{% endif %}>
                         <span>▶</span>
                         <span>Resume Job</span>
                     </button>

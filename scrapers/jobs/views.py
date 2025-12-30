@@ -102,13 +102,16 @@ def pause_job(request, job_id):
 
 @require_http_methods(["POST"])
 def resume_job(request, job_id):
-    """API endpoint to resume a paused job"""
+    """API endpoint to resume a paused, failed, or stopped job"""
     job = get_object_or_404(Job, job_id=job_id)
     
-    if job.status in ['paused', 'auto_paused']:
+    if job.status in ['paused', 'auto_paused', 'failed', 'stopped']:
+        # If job was failed/stopped, we reset it to running
+        # The worker will pick up from processed_items
         job.status = 'running'
         job.auto_pause_reason = None
         job.retry_count = 0
+        job.error_message = None # Clear error message
         job.save()
         
         if job.input_data and 'urls' in job.input_data:
@@ -118,7 +121,7 @@ def resume_job(request, job_id):
             current_index = job.processed_items
             async_task(process_ads_txt_job, str(job.job_id), job.input_data['urls'], start_index=current_index)
             
-            message = f'Job manually resumed by user (Worker restarted at item {current_index})'
+            message = f'Job manually resumed by user from status "{job.status}" (Worker restarted at item {current_index})'
         else:
             # Legacy behavior for jobs without saved input_data
             message = 'Job manually resumed by user'
@@ -131,7 +134,7 @@ def resume_job(request, job_id):
         
         return JsonResponse({'success': True, 'status': 'running'})
     
-    return JsonResponse({'success': False, 'error': 'Job is not paused'}, status=400)
+    return JsonResponse({'success': False, 'error': f'Cannot resume job in status "{job.status}"'}, status=400)
 
 
 @require_http_methods(["POST"])

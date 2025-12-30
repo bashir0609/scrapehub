@@ -143,8 +143,10 @@ def process_ads_txt_job(job_id, urls, start_index=0):
             
             
             # Update progress periodically
+            job.processed_items = index + 1
+            
+            # Save results every 50 items to reduce DB load for large jobs
             if (index + 1) % 50 == 0:
-                job.processed_items = index + 1
                 job.save()
                 
                 # Create progress event every 10% or every 100 items, whichever is larger
@@ -156,10 +158,8 @@ def process_ads_txt_job(job_id, urls, start_index=0):
                         message=f'Processed {index + 1}/{len(urls)} URLs'
                     )
             else:
-                # Just update processed count occasionally to keep DB load low
-                 if (index + 1) % 10 == 0:
-                    job.processed_items = index + 1
-                    job.save()
+                # Always save job progress (fast DB update)
+                job.save(update_fields=['processed_items', 'updated_at'])
         
         # Ensure final count is accurate
         job.processed_items = len(urls)

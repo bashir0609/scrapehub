@@ -68,12 +68,12 @@ def detect_homepage_url(url_input):
     if not url.startswith(('http://', 'https://')):
         url = 'https://' + url
 
-@retry_with_backoff(max_retries=2, initial_delay=1)
+@retry_with_backoff(max_retries=1, initial_delay=1)
 def _fetch_homepage(url):
     """Helper function to fetch homepage with retries"""
     response = requests.get(
         url, 
-        timeout=20,  # Increased from 10
+        timeout=10,  # Reduced from 20 for better performance
         allow_redirects=True,
         headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
         verify=False
@@ -125,12 +125,12 @@ def detect_homepage_url(url_input):
         return None, f'Error: {str(e)}'
 
 
-@retry_with_backoff(max_retries=2, initial_delay=0.5)
+@retry_with_backoff(max_retries=1, initial_delay=0.5)
 def _fetch_file(url):
     """Helper function to fetch file with retries"""
     response = requests.get(
         url, 
-        timeout=20,  # Increased from 10
+        timeout=10,  # Reduced from 20
         headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
         verify=False
     )
