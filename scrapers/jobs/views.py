@@ -178,7 +178,7 @@ def download_job_results(request, job_id):
         
         writer = csv.writer(response)
         # Write header
-        writer.writerow(['Original URL', 'Homepage URL', 'Detection Status', 'Ads.txt Status', 'App-ads.txt Status', 'Error'])
+        writer.writerow(['Original URL', 'Homepage URL', 'Detection Status', 'Ads.txt Status', 'App-ads.txt Status', 'Ads.txt Content', 'App-ads.txt Content', 'Error'])
         
         # Write rows
         for r in results_qs:
@@ -188,6 +188,8 @@ def download_job_results(request, job_id):
                 r.homepage_detection or '',
                 r.ads_txt_result.get('result_text', '') if r.ads_txt_result else '',
                 r.app_ads_txt_result.get('result_text', '') if r.app_ads_txt_result else '',
+                r.ads_txt_result.get('content', '') if r.ads_txt_result else '',
+                r.app_ads_txt_result.get('content', '') if r.app_ads_txt_result else '',
                 r.error or ''
             ])
             
