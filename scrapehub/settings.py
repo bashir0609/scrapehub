@@ -168,11 +168,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Cache configuration for progress tracking
+# Cache configuration (Redis)
+REDIS_HOST = os.getenv('REDIS_HOST', 'redis')
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{REDIS_HOST}:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
 
@@ -187,15 +191,15 @@ CORS_ALLOW_ALL_ORIGINS = True  # For development only
 # Increase data upload size limit for large API responses
 DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB (default is 2.5 MB)
 
-# Django-Q2 Configuration (Task backend for Django 6.0)
+# Django-Q2 Configuration (Redis Broker)
 Q_CLUSTER = {
     'name': 'scrapehub',
     'workers': 4,
     'recycle': 500,
-    'timeout': 43200,  # 12 hours for long-running scraping jobs
-    'retry': 43800,  # 12 hours + 10 minutes
+    'timeout': 43200,
+    'retry': 43800,
     'queue_limit': 50,
     'bulk': 10,
-    'orm': 'default',  # Use PostgreSQL
+    'django_redis': 'default',  # Use the 'default' cache defined in CACHES
     'catch_up': False,
 }

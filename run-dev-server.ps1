@@ -13,6 +13,7 @@ $env:POSTGRES_USER = "postgres"
 $env:POSTGRES_PASSWORD = "postgres"
 $env:POSTGRES_HOST = "localhost"
 $env:POSTGRES_PORT = "5433"  # Docker maps PostgreSQL to port 5433 on host
+$env:REDIS_HOST = "localhost"  # Docker maps Redis to port 6379 on host
 
 # Django Configuration
 $env:DEBUG = "1"
