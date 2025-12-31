@@ -10,8 +10,60 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from urllib.parse import urlparse, urlunparse
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+
 # Suppress InsecureRequestWarning since we intentionally use verify=False for scraping
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+class MockResponse:
+    """Mock response object for Selenium fallback"""
+    def __init__(self, content, status_code=200, url=None):
+        self.text = content
+        self.status_code = status_code
+        self.url = url
+
+def get_selenium_content(url):
+    """
+    Fetch content using headless Chrome via Selenium.
+    Used as fallback for 403/401 errors.
+    """
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+    
+    driver = None
+    try:
+        # Use system installed chromium-driver in Docker
+        service = Service("/usr/bin/chromedriver")
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        
+        driver.set_page_load_timeout(30)
+        driver.get(url)
+        
+        # Wait a bit for JS to execute (simple wait)
+        time.sleep(2)
+        
+        content = driver.page_source
+        current_url = driver.current_url
+        
+        return MockResponse(content, 200, current_url)
+        
+    except Exception as e:
+        print(f"Selenium error for {url}: {str(e)}")
+        # If selenium fails, return a 500 equivalent
+        return MockResponse(str(e), 500, url)
+    finally:
+        if driver:
+            try:
+                driver.quit()
+            except:
+                pass
 
 
 def retry_with_backoff(max_retries=3, initial_delay=1, backoff_factor=2, exceptions=(requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
@@ -70,15 +122,35 @@ def detect_homepage_url(url_input):
 
 @retry_with_backoff(max_retries=1, initial_delay=1)
 def _fetch_homepage(url):
-    """Helper function to fetch homepage with retries"""
-    response = requests.get(
-        url, 
-        timeout=10,  # Reduced from 20 for better performance
-        allow_redirects=True,
-        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
-        verify=False
-    )
-    return response
+    """Helper function to fetch homepage with retries and browser fallback"""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    }
+    
+    try:
+        response = requests.get(
+            url, 
+            timeout=10,
+            allow_redirects=True,
+            headers=headers,
+            verify=False
+        )
+        
+        # Check for blocking status codes
+        if response.status_code in [403, 401, 429, 503]:
+            print(f"Got {response.status_code} for {url}, trying Selenium fallback...")
+            return get_selenium_content(url)
+            
+        return response
+        
+    except (requests.exceptions.RequestException, Exception) as e:
+        # If requests fails completely (e.g. strict SSL handshake issues), try selenium
+        print(f"Request failed for {url}: {str(e)}. Trying Selenium fallback...")
+        return get_selenium_content(url)
 
 def detect_homepage_url(url_input):
     """
@@ -127,14 +199,31 @@ def detect_homepage_url(url_input):
 
 @retry_with_backoff(max_retries=1, initial_delay=0.5)
 def _fetch_file(url):
-    """Helper function to fetch file with retries"""
-    response = requests.get(
-        url, 
-        timeout=10,  # Reduced from 20
-        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'},
-        verify=False
-    )
-    return response
+    """Helper function to fetch file with retries and browser fallback"""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/plain,text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Cache-Control': 'no-cache',
+    }
+
+    try:
+        response = requests.get(
+            url, 
+            timeout=10,
+            headers=headers,
+            verify=False
+        )
+
+        # Check for blocking status codes or soft 403s
+        if response.status_code in [403, 401, 429, 503]:
+            print(f"Got {response.status_code} for {url}, trying Selenium fallback...")
+            return get_selenium_content(url)
+
+        return response
+    
+    except (requests.exceptions.RequestException, Exception) as e:
+        print(f"Request failed for {url}: {str(e)}. Trying Selenium fallback...")
+        return get_selenium_content(url)
 
 def check_file(url):
     """Helper to check a specific URL for ads.txt content"""

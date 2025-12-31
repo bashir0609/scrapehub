@@ -139,6 +139,7 @@ class JobResult(models.Model):
         indexes = [
             models.Index(fields=['job']),
             models.Index(fields=['original_url']),
+            models.Index(fields=['job', 'original_url']),  # Composite index for duplicate checks
         ]
 
     def __str__(self):

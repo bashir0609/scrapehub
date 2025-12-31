@@ -68,9 +68,9 @@ def process_ads_txt_job(job_id, urls, start_index=0):
                 # Detect homepage
                 homepage_url, detection_status = detect_homepage_url(url_input)
                 
-                # Check for duplicates (only for successful detection)
-                if homepage_url and JobResult.objects.filter(job=job, homepage_url=homepage_url).exists():
-                    # Duplicate domain found - skip adding checking logic and result
+                # Check for duplicates based on original input URL
+                if JobResult.objects.filter(job=job, original_url=url_input).exists():
+                    # Duplicate input URL found - skip processing
                     # But we still count it as processed
                     job.processed_items = index + 1
                     

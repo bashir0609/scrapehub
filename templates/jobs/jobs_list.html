@@ -301,12 +301,73 @@
     </div>
 
     <script>
-        // Auto-refresh every 30 seconds for running jobs
-        const runningCount = parseInt("{{ running_count|default:0 }}");
-        if (runningCount > 0) {
-            setTimeout(() => {
-                location.reload();
-            }, 30000);
+        // Optimized Auto-Refresh Logic
+        // 1. Checks visibility to save resources
+        // 2. Uses AJAX (fetch) to partial update without full reload
+        // 3. Stops if no running jobs (detected from DOM)
+
+        function scheduleRefresh() {
+            // Check every 10 seconds for snappy updates
+            setTimeout(refreshJobs, 10000);
+        }
+
+        async function refreshJobs() {
+            // 1. Optimization: Stop if tab is hidden
+            if (document.visibilityState !== 'visible') {
+                scheduleRefresh();
+                return;
+            }
+
+            // 2. Optimization: Partial Update via AJAX
+            try {
+                const response = await fetch(window.location.href);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const text = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+
+                // Update Table
+                const newTableBody = doc.querySelector('.jobs-table tbody');
+                const currentTableBody = document.querySelector('.jobs-table tbody');
+                if (newTableBody && currentTableBody) {
+                    currentTableBody.innerHTML = newTableBody.innerHTML;
+                }
+
+                // Update Filter Counts
+                const newFilters = doc.querySelector('.filters');
+                const currentFilters = document.querySelector('.filters');
+                if (newFilters && currentFilters) {
+                    currentFilters.innerHTML = newFilters.innerHTML;
+                }
+
+                // 3. Logic: Determine if we should keep polling
+                // Look for "Running" count in the new filters
+                // Format: "Running (X)" inside text content
+                const runningBtn = doc.querySelector('a[href*="?status=running"]');
+                let runningCount = 0;
+                if (runningBtn) {
+                     const match = runningBtn.textContent.match(/Running \((\d+)\)/);
+                     if (match) {
+                         runningCount = parseInt(match[1]);
+                     }
+                }
+                
+                if (runningCount > 0) {
+                    scheduleRefresh();
+                } else {
+                    console.log("No running jobs. Auto-refresh stopped.");
+                }
+
+            } catch (error) {
+                console.error("Auto-refresh failed:", error);
+                scheduleRefresh(); // Retry on transient error
+            }
+        }
+
+        // Initial Start Check
+        const initialRunningCount = parseInt("{{ running_count|default:0 }}");
+        if (initialRunningCount > 0) {
+            scheduleRefresh();
         }
     </script>
 </body>

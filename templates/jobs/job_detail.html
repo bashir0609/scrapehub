@@ -4,20 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>Job 8cefebfd - ScrapeHub</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
     <title>Job Details | ScrapeHub</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" charset="utf8"
-        src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.js"></script>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/job-details.css' %}">
+    <link rel="stylesheet" href="{% static 'css/live-results.css' %}">
 </head>
 
-<body>
+<body data-job-id="{{ job.job_id }}">
     <nav class="nav-header">
         <div class="nav-container">
             <a href="/" class="nav-brand">
@@ -203,26 +201,41 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h2 class="card-title" style="margin-bottom: 0;">Live Results</h2>
             <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="search" id="resultsSearch" placeholder="Search URLs..." 
+                    style="padding: 8px 12px; background: rgba(30, 41, 59, 0.5); border: 1px solid #334155; border-radius: 6px; color: #e2e8f0; font-size: 0.9em;">
                 <label style="display: flex; align-items: center; gap: 8px; color: #94a3b8; font-size: 0.9em;">
                     <input type="checkbox" id="autoRefresh" checked> Auto-refresh
                 </label>
             </div>
         </div>
 
-        <table id="resultsTable" class="display" style="width:100%; color: #e2e8f0;">
-            <thead>
-                <tr>
-                    <th style="width: 30px;"></th>
-                    <th>Original URL</th>
-                    <th>Homepage</th>
-                    <th>Ads.txt</th>
-                    <th>App-ads.txt</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <button class="filter-btn active" data-filter="all">
+                All Results <span class="count">0</span>
+            </button>
+            <button class="filter-btn" data-filter="ads-success">
+                <span class="badge-success">✓</span> Ads.txt Success <span class="count">0</span>
+            </button>
+            <button class="filter-btn" data-filter="ads-error">
+                <span class="badge-error">✕</span> Ads.txt Errors <span class="count">0</span>
+            </button>
+            <button class="filter-btn" data-filter="errors-only">
+                <span class="badge-warning">!</span> Errors Only <span class="count">0</span>
+            </button>
+        </div>
+
+        <!-- Results Container -->
+        <div class="results-container" id="resultsContainer">
+            <!-- Results will be dynamically inserted here -->
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination-container" id="paginationContainer">
+            <!-- Pagination will be dynamically inserted here -->
+        </div>
     </div>
+
 
 
     <div class="card">
@@ -256,316 +269,9 @@
 
     </div>
 
-    <script>
-        $(document).ready(function () {
-            const jobId = "{{ job.job_id }}";
-
-            // Function to format child row details
-            function formatDetails(rowData) {
-                const adsData = rowData.ads_txt || {};
-                const appAdsData = rowData.app_ads_txt || {};
-
-                return `
-                    <div style="padding: 20px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; margin: 10px 0;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                            <!-- ads.txt Details -->
-                            <div style="background: rgba(255, 255, 255, 0.05); padding: 16px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                                <h4 style="color: #94a3b8; font-size: 0.85em; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">📄 ads.txt Details</h4>
-                                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.9em;">
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">URL:</span>
-                                        <span style="color: #e2e8f0; font-weight: 500;">${adsData.url ? `<a href="${adsData.url}" target="_blank" style="color: #667eea; text-decoration: none;">${adsData.url}</a>` : '-'}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">Status Code:</span>
-                                        <span style="color: #e2e8f0; font-weight: 500;">${adsData.status_code || '-'}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">Has HTML:</span>
-                                        <span style="color: ${adsData.has_html === 'Yes' ? '#ef4444' : '#22c55e'}; font-weight: 600;">${adsData.has_html || '-'}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">Response Time:</span>
-                                        <span style="color: #e2e8f0; font-weight: 500;">${adsData.time_ms ? adsData.time_ms + ' ms' : '-'}</span>
-                                    </div>
-                                    <div style="padding: 8px 0;">
-                                        <span style="color: #94a3b8; display: block; margin-bottom: 8px;">Content:</span>
-                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 6px; max-height: 150px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.85em; color: #cbd5e1; white-space: pre-wrap; word-break: break-all;">${adsData.content || 'No content'}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- app-ads.txt Details -->
-                            <div style="background: rgba(255, 255, 255, 0.05); padding: 16px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                                <h4 style="color: #94a3b8; font-size: 0.85em; text-transform: uppercase; margin-bottom: 12px; font-weight: 600;">📱 app-ads.txt Details</h4>
-                                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.9em;">
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">URL:</span>
-                                        <span style="color: #e2e8f0; font-weight: 500;">${appAdsData.url ? `<a href="${appAdsData.url}" target="_blank" style="color: #667eea; text-decoration: none;">${appAdsData.url}</a>` : '-'}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">Status Code:</span>
-                                        <span style="color: #e2e8f0; font-weight: 500;">${appAdsData.status_code || '-'}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">Has HTML:</span>
-                                        <span style="color: ${appAdsData.has_html === 'Yes' ? '#ef4444' : '#22c55e'}; font-weight: 600;">${appAdsData.has_html || '-'}</span>
-                                    </div>
-                                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                                        <span style="color: #94a3b8;">Response Time:</span>
-                                        <span style="color: #e2e8f0; font-weight: 500;">${appAdsData.time_ms ? appAdsData.time_ms + ' ms' : '-'}</span>
-                                    </div>
-                                    <div style="padding: 8px 0;">
-                                        <span style="color: #94a3b8; display: block; margin-bottom: 8px;">Content:</span>
-                                        <div style="background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 6px; max-height: 150px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 0.85em; color: #cbd5e1; white-space: pre-wrap; word-break: break-all;">${appAdsData.content || 'No content'}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Initialize DataTable
-            const table = $('#resultsTable').DataTable({
-                serverSide: true,
-                processing: true,
-                ajax: {
-                    url: `/jobs/api/${jobId}/results/`,
-                    type: 'GET'
-                },
-                columns: [
-                    {
-                        className: 'details-control',
-                        orderable: false,
-                        data: null,
-                        defaultContent: '<button style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white; width: 24px; height: 24px; border-radius: 6px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">+</button>'
-                    },
-                    { 
-                        data: 'original_url',
-                        render: function(data, type, row) {
-                            if (row.error) {
-                                return `<span style="color: #ef4444;">${data}</span>`;
-                            }
-                            return data;
-                        }
-                    },
-                    {
-                        data: 'homepage_url',
-                        render: function (data, type, row) {
-                            if (row.error) {
-                                return `<span style="color: #ef4444; font-size: 0.9em;">❌ ${row.error}</span>`;
-                            }
-                            return data ? `<a href="${data}" target="_blank" style="color: #667eea; text-decoration: none;">${data}</a>` : '-';
-                        }
-                    },
-                    {
-                        data: 'ads_txt',
-                        render: function (data, type, row) {
-                            if (row.error) return '<span style="color: #64748b;">-</span>';
-                            if (!data) return '<span style="color: #94a3b8;">-</span>';
-                            const color = data.status_code === 200 ? '#22c55e' : '#ef4444';
-                            const icon = data.status_code === 200 ? '✅' : '❌';
-                            return `<span style="color: ${color}; font-weight: 500;">${icon} ${data.result_text || data.status_code}</span>`;
-                        }
-                    },
-                    {
-                        data: 'app_ads_txt',
-                        render: function (data, type, row) {
-                            if (row.error) return '<span style="color: #64748b;">-</span>';
-                            if (!data) return '<span style="color: #94a3b8;">-</span>';
-                            const color = data.status_code === 200 ? '#22c55e' : '#ef4444';
-                            const icon = data.status_code === 200 ? '✅' : '❌';
-                            return `<span style="color: ${color}; font-weight: 500;">${icon} ${data.result_text || data.status_code}</span>`;
-                        }
-                    }
-                ],
-                pageLength: 10,
-                language: {
-                    search: "Search URLs:",
-                    paginate: {
-                        next: "Next",
-                        previous: "Prev"
-                    }
-                }
-            });
-
-            // Add event listener for opening and closing details
-            $('#resultsTable tbody').on('click', 'td.details-control', function () {
-                const tr = $(this).closest('tr');
-                const row = table.row(tr);
-                const btn = $(this).find('button');
-
-                if (row.child.isShown()) {
-                    // This row is already open - close it
-                    row.child.hide();
-                    tr.removeClass('shown');
-                    btn.html('+');
-                    btn.css('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)');
-                } else {
-                    // Open this row
-                    row.child(formatDetails(row.data())).show();
-                    tr.addClass('shown');
-                    btn.html('−');
-                    btn.css('background', 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)');
-                }
-            });
-
-            // Batch Processing Status Tracking
-            let lastProcessedItems = Number("{{ job.processed_items|default:0 }}");
-
-            let lastUpdateTime = Date.now();
-            let processingRateHistory = [];
-
-            // Polling function for Status & Stats
-            async function pollStatus() {
-                try {
-                    const res = await fetch(`/jobs/api/${jobId}/status/`);
-                    const data = await res.json();
-
-                    // Update Progress
-                    if (data.progress !== undefined) {
-                        $('#progressText').text(data.progress);
-                        $('#progressBarText').text(data.progress + '%');
-                        $('#progressBar').css('width', data.progress + '%');
-                    }
-
-                    if (data.processed_items !== undefined) {
-                        $('#statProcessedItems').text(data.processed_items);
-                    }
-
-                    // Update Stats
-                    if (data.stats) {
-                        $('#countAdsSuccess').text(data.stats.ads_success);
-                        $('#countAdsErrors').text(data.stats.ads_error);
-                        $('#countAppAdsSuccess').text(data.stats.app_success);
-                        $('#countAppAdsErrors').text(data.stats.app_error);
-                        $('#statsCard').show();
-                    }
-
-                    // Calculate Batch Processing Rate & ETA
-                    if (data.processed_items !== undefined && data.total_items !== undefined) {
-                        const now = Date.now();
-                        const timeDiff = (now - lastUpdateTime) / 1000; // seconds
-                        const itemsDiff = data.processed_items - lastProcessedItems;
-
-                        if (timeDiff > 0 && itemsDiff > 0) {
-                            const rate = itemsDiff / timeDiff; // items per second
-                            processingRateHistory.push(rate);
-
-                            // Keep only last 5 measurements for averaging
-                            if (processingRateHistory.length > 5) {
-                                processingRateHistory.shift();
-                            }
-
-                            // Calculate average rate
-                            const avgRate = processingRateHistory.reduce((a, b) => a + b, 0) / processingRateHistory.length;
-                            const itemsPerMin = (avgRate * 60).toFixed(1);
-
-                            // Calculate batch progress (50 items per batch)
-                            const batchSize = 50;
-                            const currentBatch = Math.ceil(data.processed_items / batchSize);
-                            const totalBatches = Math.ceil(data.total_items / batchSize);
-                            $('#batchProgress').text(`${currentBatch} / ${totalBatches}`);
-
-                            // Update rate display
-                            $('#processingRate').text(`${itemsPerMin} items/min`);
-
-                            // Calculate ETA
-                            const remainingItems = data.total_items - data.processed_items;
-                            const etaSeconds = remainingItems / avgRate;
-
-                            if (etaSeconds < 3600) {
-                                const minutes = Math.round(etaSeconds / 60);
-                                $('#estimatedTime').text(`~${minutes} min`);
-                            } else {
-                                const hours = (etaSeconds / 3600).toFixed(1);
-                                $('#estimatedTime').text(`~${hours} hrs`);
-                            }
-
-                            lastProcessedItems = data.processed_items;
-                            lastUpdateTime = now;
-                        }
-                    }
-
-                    // Show Download Options on Completion
-                    if (data.status === 'completed' || data.status === 'failed') {
-                        $('#downloadContainer').show();
-                        $('.live-indicator').hide();
-                        $('#batchStatus').hide();
-                        return; // Stop polling if done
-                    }
-
-                    // Auto-refresh Table
-                    if ($('#autoRefresh').is(':checked') && data.status === 'running') {
-                        table.ajax.reload(null, false); // Reload table data without resetting paging
-                    }
-
-                    // Smart polling: adjust interval based on job status
-                    let nextPollInterval;
-                    if (data.status === 'running') {
-                        nextPollInterval = 5000; // 5 seconds for active jobs
-                    } else if (data.status === 'paused' || data.status === 'auto_paused') {
-                        nextPollInterval = 30000; // 30 seconds for paused jobs
-                    } else {
-                        // Stop polling for completed/failed jobs
-                        return;
-                    }
-                    
-                    setTimeout(pollStatus, nextPollInterval);
-
-                } catch (e) {
-                    console.error("Polling error:", e);
-                    setTimeout(pollStatus, 50000);
-                }
-            }
-
-            // Start polling if job is active
-
-            pollStatus();
-
-
-            // Global control functions
-            window.pauseJob = async () => {
-                if (!confirm('Pause this job?')) return;
-                try {
-                    const res = await fetch(`/jobs/api/${jobId}/pause/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
-                    if (res.ok) location.reload();
-                } catch (e) { alert("Error pausing job"); }
-            };
-            window.resumeJob = async () => {
-                try {
-                    const res = await fetch(`/jobs/api/${jobId}/resume/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
-                    if (res.ok) location.reload();
-                } catch (e) { alert("Error resuming job"); }
-            };
-            window.stopJob = async () => {
-                if (!confirm('Stop this job? This action cannot be undone.')) return;
-                try {
-                    const res = await fetch(`/jobs/api/${jobId}/stop/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
-                    if (res.ok) location.reload();
-                } catch (e) { alert("Error stopping job"); }
-            };
-
-            // Event Timeline Pagination
-            let visibleEventCount = 10;
-            $('#showMoreEvents').on('click', function () {
-                visibleEventCount += 10;
-                $(`.timeline-item`).each(function () {
-                    const index = parseInt($(this).data('event-index'));
-                    if (index <= visibleEventCount) {
-                        $(this).slideDown(300);
-                    }
-                });
-
-                // Hide button if all events are visible
-                const totalEvents = $('.timeline-item').length;
-                if (visibleEventCount >= totalEvents) {
-                    $('#showMoreEvents').fadeOut();
-                }
-            });
-        });
-    </script>
+    <!-- Load JavaScript Files -->
+    <script src="{% static 'js/job-controls.js' %}"></script>
+    <script src="{% static 'js/live-results.js' %}?v=fixed2"></script>
 </body>
 
 </html>

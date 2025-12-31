@@ -60,11 +60,11 @@ def job_status_api(request, job_id):
     
     should_recalculate = (
         job.stats_last_updated is None or 
-        (timezone.now() - job.stats_last_updated) > timedelta(minutes=5)
+        (timezone.now() - job.stats_last_updated) > timedelta(seconds=10)
     )
     
-    if should_recalculate and job.status in ['completed', 'failed']:
-        # Only recalculate for completed/failed jobs if stats are stale
+    if should_recalculate:
+        # Recalculate if stale, regardless of job status
         job.update_statistics()
         job.refresh_from_db()
     
@@ -258,19 +258,23 @@ def download_job_results(request, job_id):
 
 def job_results_api(request, job_id):
     """
-    API endpoint for DataTables server-side processing.
-    Handles pagination, searching, and sorting using the JobResult model directly.
+    API endpoint for server-side processing.
+    Handles pagination, searching, filtering, and sorting using the JobResult model directly.
     """
     job = get_object_or_404(Job, job_id=job_id)
     
-    # Base queryset
-    results = job.results.all()
+    # Base queryset - ALWAYS filter by job to prevent cross-job leakage
+    results = JobResult.objects.filter(job=job)
+    records_total = results.count()
     
-    # Parameters from DataTables
+    # Parameters
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
     length = int(request.GET.get('length', 10))
-    search_value = request.GET.get('search[value]', '').strip()
+    search_value = request.GET.get('search[value]', '') or request.GET.get('search', '')
+    search_value = search_value.strip()
+    filter_type = request.GET.get('filter', 'all')
+    get_counts = request.GET.get('get_counts', 'false').lower() == 'true'
     
     # Text Search (Filtering)
     if search_value:
@@ -280,18 +284,56 @@ def job_results_api(request, job_id):
             Q(error__icontains=search_value)
         )
     
+    # Apply filter
+    if filter_type != 'all':
+        if filter_type == 'ads-success':
+            results = results.filter(ads_txt_result__status_code=200)
+        elif filter_type == 'ads-error':
+            results = results.exclude(ads_txt_result__status_code=200)
+        elif filter_type == 'app-success':
+            results = results.filter(app_ads_txt_result__status_code=200)
+        elif filter_type == 'app-error':
+            results = results.exclude(app_ads_txt_result__status_code=200)
+        elif filter_type == 'errors-only':
+            results = results.filter(
+                Q(error__isnull=False) |
+                ~Q(ads_txt_result__status_code=200) |
+                ~Q(app_ads_txt_result__status_code=200)
+            )
+    
+    # Get filter counts if requested
+    filter_counts = None
+    if get_counts:
+        # IMPORTANT: Always start with job filter
+        all_results = JobResult.objects.filter(job=job)
+        if search_value:
+            all_results = all_results.filter(
+                Q(original_url__icontains=search_value) |
+                Q(homepage_url__icontains=search_value) |
+                Q(error__icontains=search_value)
+            )
+        
+        filter_counts = {
+            'all': all_results.count(),
+            'ads-success': all_results.filter(ads_txt_result__status_code=200).count(),
+            'ads-error': all_results.exclude(ads_txt_result__status_code=200).count(),
+            'app-success': all_results.filter(app_ads_txt_result__status_code=200).count(),
+            'app-error': all_results.exclude(app_ads_txt_result__status_code=200).count(),
+            'errors-only': all_results.filter(
+                Q(error__isnull=False) |
+                ~Q(ads_txt_result__status_code=200) |
+                ~Q(app_ads_txt_result__status_code=200)
+            ).count(),
+        }
+    
     # Sorting
     order_column_idx = int(request.GET.get('order[0][column]', 0))
     order_dir = request.GET.get('order[0][dir]', 'asc')
     
     # Map column index to field names
-    # 0: expand button, 1: Original URL, 2: Homepage, 3: Ads.txt, 4: App-ads.txt
     column_map = {
         1: 'original_url',
         2: 'homepage_url',
-        # Complex JSON fields or computed fields can't be easily sorted by DB
-        # We'll stick to basic fields for efficient DB sorting, 
-        # or defaults to insertion order (id)
     }
     
     order_field = column_map.get(order_column_idx)
@@ -304,8 +346,19 @@ def job_results_api(request, job_id):
         results = results.order_by('-id')
 
     # Pagination
+    records_filtered = results.count()
+    
+    # If length is 0, just return counts (for get_counts requests)
+    if length == 0:
+        return JsonResponse({
+            "draw": draw,
+            "recordsTotal": records_total,
+            "recordsFiltered": records_filtered,
+            "data": [],
+            "filter_counts": filter_counts
+        })
+    
     paginator = Paginator(results, length)
-    # Calculate page number (1-based) from start offset
     page_number = (start // length) + 1
     
     try:
@@ -314,7 +367,7 @@ def job_results_api(request, job_id):
     except:
         data_objects = []
     
-    # Serialize data for DataTables
+    # Serialize data
     data = []
     for r in data_objects:
         data.append({
@@ -326,10 +379,16 @@ def job_results_api(request, job_id):
             'error': r.error
         })
     
-    return JsonResponse({
+    response_data = {
         "draw": draw,
-        "recordsTotal": job.processed_items, # Approx total
-        "recordsFiltered": paginator.count,   # Actual filtered count
+        "recordsTotal": records_total,
+        "recordsFiltered": records_filtered,
         "data": data
-    })
+    }
+    
+    if filter_counts:
+        response_data["filter_counts"] = filter_counts
+    
+    return JsonResponse(response_data)
+
 

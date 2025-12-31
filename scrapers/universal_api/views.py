@@ -1036,7 +1036,7 @@ def scrape_paginated(request):
                 print(f"[scrape_paginated] No fields specified, returning all data")
         
         # Check if we have too many records (might cause memory issues)
-        if len(all_records) > 10000:
+        if len(all_records) > 20000:
             if settings.DEBUG:
                 print(f"Warning: Large dataset ({len(all_records)} records)")
         
