@@ -4,8 +4,7 @@ services:
   web:
     build: .
     command: sh -c "python manage.py migrate && gunicorn scrapehub.wsgi:application --bind 0.0.0.0:8000"
-    volumes:
-      - static_volume:/app/staticfiles
+
     # Remove 'ports' - Coolify proxy handles routing to exposed port 8000
     expose:
       - "8000"
@@ -26,8 +25,7 @@ services:
   worker:
     build: .
     command: python manage.py qcluster
-    volumes:
-      - static_volume:/app/staticfiles
+
     environment:
       - DEBUG=0
       - SECRET_KEY=${SECRET_KEY}
@@ -65,4 +63,4 @@ services:
 
 volumes:
   postgres_data:
-  static_volume:
+
