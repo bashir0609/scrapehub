@@ -35,7 +35,8 @@ RUN playwright install-deps chromium || true
 COPY . /app/
 
 # Collect static files
-RUN python manage.py collectstatic --noinput || true
+# Collect static files (with dummy secret key for build process)
+RUN SECRET_KEY=build_secret_key python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000
